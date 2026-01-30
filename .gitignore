@@ -21,6 +21,7 @@ out/
 .settings/
 
 .vscode/
+.worktrees/
 
 ############################################
 # 后端：Java / Spring Boot / Maven
