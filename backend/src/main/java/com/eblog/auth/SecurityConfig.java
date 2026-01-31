@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .requireCsrfProtectionMatcher(csrfOnlyForAuthWriteEndpoints()))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .httpBasic(Customizer.withDefaults())
+        .httpBasic(basic -> basic.disable())
         .formLogin(form -> form.disable())
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
