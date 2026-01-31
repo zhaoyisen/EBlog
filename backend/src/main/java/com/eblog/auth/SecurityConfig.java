@@ -50,7 +50,11 @@ public class SecurityConfig {
           return false;
         }
         String path = request.getRequestURI();
-        return "/api/v1/auth/refresh".equals(path) || "/api/v1/auth/logout".equals(path);
+        // Exclude refresh and logout from CSRF check as they rely on SameSite=Strict HttpOnly cookies
+        if ("/api/v1/auth/refresh".equals(path) || "/api/v1/auth/logout".equals(path)) {
+          return false;
+        }
+        return true;
       }
     };
   }
