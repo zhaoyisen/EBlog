@@ -22,10 +22,9 @@ type PostDetail = {
 };
 
 function apiUrl(path: string) {
-  const baseRaw = process.env.NEXT_PUBLIC_API_BASE ?? "";
+  const baseRaw = process.env.INTERNAL_API_BASE ?? "http://localhost:8080";
   const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
-  const prefix = base === "/api" ? "" : base;
-  return `${prefix}${path}`;
+  return `${base}${path}`;
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {

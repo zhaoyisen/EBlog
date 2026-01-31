@@ -228,6 +228,7 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-black/10 bg-white/70 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] backdrop-blur">
               <div className="flex items-center gap-4 mb-6">
                 {avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- 远程头像来源不固定，暂不使用 next/image
                   <img
                     src={avatar}
                     alt={nickname || "用户头像"}

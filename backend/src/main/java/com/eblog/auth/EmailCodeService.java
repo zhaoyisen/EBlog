@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.security.SecureRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,25 +15,32 @@ import org.springframework.stereotype.Service;
 public class EmailCodeService {
 
   private static final SecureRandom RANDOM = new SecureRandom();
+  private static final Logger log = LoggerFactory.getLogger(EmailCodeService.class);
 
   private final EmailCodeMapper emailCodeMapper;
   private final JavaMailSender mailSender;
   private final String mailFrom;
   private final long codeTtlSeconds;
+  private final String appEnv;
 
   public EmailCodeService(
       EmailCodeMapper emailCodeMapper,
       JavaMailSender mailSender,
       @Value("${SMTP_FROM:}") String mailFrom,
+      @Value("${APP_ENV:}") String appEnv,
       @Value("${EMAIL_CODE_TTL_SECONDS:600}") long codeTtlSeconds) {
     this.emailCodeMapper = emailCodeMapper;
     this.mailSender = mailSender;
     this.mailFrom = mailFrom;
+    this.appEnv = appEnv;
     this.codeTtlSeconds = codeTtlSeconds;
   }
 
   public void sendRegisterCode(String email) {
     String code = generateSixDigitCode();
+    if (shouldLogRegisterCode(appEnv)) {
+      log.info("register email code: email={}, code={}", email, code);
+    }
     String hash = RefreshTokenHasher.sha256Hex(code);
 
     EmailCodeEntity entity = new EmailCodeEntity();
@@ -74,5 +83,9 @@ public class EmailCodeService {
   static String generateSixDigitCode() {
     int n = RANDOM.nextInt(1000000);
     return String.format("%06d", n);
+  }
+
+  static boolean shouldLogRegisterCode(String appEnv) {
+    return appEnv != null && "dev".equalsIgnoreCase(appEnv.trim());
   }
 }

@@ -14,15 +14,16 @@ import org.springframework.stereotype.Component;
 public class RuleEngine {
 
   @Value("${MODERATION_SENSITIVE_WORDS:spam,adult,gambling,xxx,porn}")
-  private String sensitiveWordsConfig;
+  private String sensitiveWordsConfig = "spam,adult,gambling,xxx,porn";
 
   @Value("${MODERATION_MAX_EXTERNAL_LINKS:10}")
-  private int maxExternalLinks;
+  private int maxExternalLinks = 10;
 
   private Set<String> sensitiveWords = new HashSet<>();
   private Pattern httpLinkPattern = Pattern.compile("https?://[\\w\\.-]+", Pattern.CASE_INSENSITIVE);
 
   public void init() {
+    sensitiveWords.clear();
     if (sensitiveWordsConfig != null && !sensitiveWordsConfig.trim().isEmpty()) {
       String[] words = sensitiveWordsConfig.split(",");
       for (String word : words) {

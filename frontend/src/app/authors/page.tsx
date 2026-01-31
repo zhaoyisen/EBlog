@@ -104,6 +104,7 @@ export default function AuthorsPage() {
               >
                 <div className="flex items-start gap-4">
                   {author.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- 远程头像来源不固定，暂不使用 next/image
                     <img
                       src={author.avatarUrl}
                       alt={author.nickname || `Author #${author.id}`}

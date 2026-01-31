@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(1200px_circle_at_20%_10%,theme(colors.slate.200),transparent_55%),radial-gradient(900px_circle_at_80%_20%,theme(colors.amber.200),transparent_50%),linear-gradient(to_bottom,theme(colors.zinc.50),theme(colors.zinc.100))]">
@@ -12,18 +14,15 @@ export default function Home() {
           </div>
         </div>
         <nav className="flex items-center gap-2 text-sm">
-          <a className="rounded-full px-3 py-2 text-zinc-700 hover:bg-white/70" href="/posts">
+          <Link className="rounded-full px-3 py-2 text-zinc-700 hover:bg-white/70" href="/posts">
             文章
-          </a>
-          <a className="rounded-full px-3 py-2 text-zinc-700 hover:bg-white/70" href="/authors">
+          </Link>
+          <Link className="rounded-full px-3 py-2 text-zinc-700 hover:bg-white/70" href="/authors">
             作者
-          </a>
-          <a
-            className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-zinc-50 hover:bg-zinc-800"
-            href="/login"
-          >
+          </Link>
+          <Link className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-zinc-50 hover:bg-zinc-800" href="/login">
             登录
-          </a>
+          </Link>
         </nav>
       </header>
 
@@ -39,18 +38,18 @@ export default function Home() {
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <a
+              <Link
                 className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-zinc-50 shadow-sm hover:bg-zinc-800"
                 href="/posts"
               >
                 立即开始
-              </a>
-              <a
+              </Link>
+              <Link
                 className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white/70 px-5 py-3 text-sm font-medium text-zinc-900 hover:bg-white"
                 href="/posts"
               >
                 查看最新文章
-              </a>
+              </Link>
             </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
