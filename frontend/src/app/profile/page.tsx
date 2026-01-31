@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { appConfig } from "../../config/appConfig";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -17,7 +18,7 @@ type UserView = {
 };
 
 function apiUrl(path: string) {
-  const baseRaw = process.env.NEXT_PUBLIC_API_BASE ?? "";
+  const baseRaw = appConfig.apiBase;
   const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
   const prefix = base === "/api" ? "" : base;
   return `${prefix}${path}`;
@@ -228,6 +229,7 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-black/10 bg-white/70 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] backdrop-blur">
               <div className="flex items-center gap-4 mb-6">
                 {avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- 远程头像来源不固定，暂不使用 next/image
                   <img
                     src={avatar}
                     alt={nickname || "用户头像"}

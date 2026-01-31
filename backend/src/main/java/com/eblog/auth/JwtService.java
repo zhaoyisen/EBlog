@@ -19,9 +19,9 @@ public class JwtService {
   private final long accessTtlSeconds;
 
   public JwtService(
-      @Value("${JWT_SECRET:}") String secret,
-      @Value("${JWT_ISSUER:eblog}") String issuer,
-      @Value("${JWT_ACCESS_TTL_SECONDS:900}") long accessTtlSeconds) {
+      @Value("${app.jwt.secret}") String secret,
+      @Value("${app.jwt.issuer}") String issuer,
+      @Value("${app.jwt.access-ttl-seconds}") long accessTtlSeconds) {
     if (secret == null || secret.trim().isEmpty()) {
       // Dev-friendly: allow boot without secret; runtime should set it.
       secret = "dev-only-secret-change-me";

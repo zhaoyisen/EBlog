@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { appConfig } from "../../config/appConfig";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -17,7 +18,7 @@ type AuthorSummary = {
 };
 
 function apiUrl(path: string) {
-  const baseRaw = process.env.NEXT_PUBLIC_API_BASE ?? "";
+  const baseRaw = appConfig.apiBase;
   const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
   const prefix = base === "/api" ? "" : base;
   return `${prefix}${path}`;
@@ -104,6 +105,7 @@ export default function AuthorsPage() {
               >
                 <div className="flex items-start gap-4">
                   {author.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- 远程头像来源不固定，暂不使用 next/image
                     <img
                       src={author.avatarUrl}
                       alt={author.nickname || `Author #${author.id}`}

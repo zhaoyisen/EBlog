@@ -2,9 +2,7 @@ package com.eblog.auth;
 
 import com.eblog.api.common.ApiResponse;
 import com.eblog.api.common.ErrorCode;
-import com.eblog.user.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth/email-code")
-@ConditionalOnBean({EmailCodeMapper.class, UserMapper.class})
 public class EmailCodeController {
 
   private final EmailCodeService emailCodeService;

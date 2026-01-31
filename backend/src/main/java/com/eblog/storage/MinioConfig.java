@@ -12,9 +12,9 @@ public class MinioConfig {
   @Bean
   @ConditionalOnExpression("!'${MINIO_ENDPOINT:}'.isEmpty() && !'${MINIO_ACCESS_KEY:}'.isEmpty() && !'${MINIO_SECRET_KEY:}'.isEmpty()")
   MinioClient minioClient(
-      @Value("${MINIO_ENDPOINT:}") String endpoint,
-      @Value("${MINIO_ACCESS_KEY:}") String accessKey,
-      @Value("${MINIO_SECRET_KEY:}") String secretKey) {
+      @Value("${app.minio.endpoint}") String endpoint,
+      @Value("${app.minio.access-key}") String accessKey,
+      @Value("${app.minio.secret-key}") String secretKey) {
     return MinioClient.builder()
         .endpoint(endpoint)
         .credentials(accessKey, secretKey)

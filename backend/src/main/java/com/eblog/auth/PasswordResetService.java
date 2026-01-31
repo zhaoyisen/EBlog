@@ -7,7 +7,6 @@ import com.eblog.user.UserMapper;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnBean({UserMapper.class, PasswordResetTokenMapper.class, RefreshTokenMapper.class})
 public class PasswordResetService {
   private final UserMapper userMapper;
   private final PasswordResetTokenMapper tokenMapper;
@@ -33,8 +31,8 @@ public class PasswordResetService {
       RefreshTokenMapper refreshTokenMapper,
       PasswordResetRateLimiter rateLimiter,
       JavaMailSender mailSender,
-      @Value("${SMTP_FROM:}") String mailFrom,
-      @Value("${PASSWORD_RESET_TTL_SECONDS:1800}") long ttlSeconds) {
+      @Value("${app.mail.from}") String mailFrom,
+      @Value("${app.password-reset.ttl-seconds}") long ttlSeconds) {
     this.userMapper = userMapper;
     this.tokenMapper = tokenMapper;
     this.refreshTokenMapper = refreshTokenMapper;

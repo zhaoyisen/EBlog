@@ -35,10 +35,10 @@ public class WorkerService {
   private final CommentMapper commentMapper;
   private final ModerationService moderationService;
 
-  @Value("${WORKER_INTERVAL_SECONDS:10}")
+  @Value("${app.worker.interval-seconds}")
   private int workerIntervalSeconds;
 
-  @Value("${WORKER_BATCH_SIZE:10}")
+  @Value("${app.worker.batch-size}")
   private int workerBatchSize;
 
   public WorkerService(
@@ -58,8 +58,8 @@ public class WorkerService {
   }
 
   @Scheduled(
-    fixedRateString = "#{${WORKER_INTERVAL_SECONDS:10} * 1000}",
-    initialDelayString = "#{${WORKER_INTERVAL_SECONDS:10} * 1000}"
+    fixedRateString = "#{${app.worker.interval-seconds} * 1000}",
+    initialDelayString = "#{${app.worker.interval-seconds} * 1000}"
   )
   @Transactional
   public void processOutbox() {

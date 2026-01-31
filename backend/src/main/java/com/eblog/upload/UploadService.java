@@ -22,9 +22,9 @@ public class UploadService {
 
   public UploadService(
       MinioClient minioClient,
-      @Value("${MINIO_BUCKET_PUBLIC:eblog-public}") String publicBucket,
-      @Value("${MINIO_PUBLIC_BASE_URL:${MINIO_ENDPOINT:}}") String publicBaseUrl,
-      @Value("${UPLOAD_MAX_BYTES:10485760}") long maxBytes) {
+      @Value("${app.minio.bucket-public}") String publicBucket,
+      @Value("${app.minio.public-base-url}") String publicBaseUrl,
+      @Value("${app.upload.max-bytes}") long maxBytes) {
     this.minioClient = minioClient;
     this.publicBucket = publicBucket;
     this.publicBaseUrl = publicBaseUrl;

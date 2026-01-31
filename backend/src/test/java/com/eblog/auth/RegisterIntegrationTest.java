@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -26,7 +26,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@EnabledIfEnvironmentVariable(named = "EBLOG_ENABLE_TESTCONTAINERS", matches = "true")
+@EnabledIfSystemProperty(named = "eblog.testcontainers", matches = "true")
 class RegisterIntegrationTest {
 
   @Container
@@ -45,7 +45,7 @@ class RegisterIntegrationTest {
     registry.add("spring.mail.port", () -> "2525");
     registry.add("spring.mail.username", () -> "");
     registry.add("spring.mail.password", () -> "");
-    registry.add("JWT_SECRET", () -> "test-secret");
+    registry.add("app.jwt.secret", () -> "test-secret");
   }
 
   @Autowired

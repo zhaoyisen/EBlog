@@ -1,25 +1,53 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
 
-
-base-url: ${BASE_URL:http://localhost:3000}
+app:
+  env: dev
+  base-url: http://localhost:3000
+  jwt:
+    secret: dev-secret-change-me
+    issuer: eblog
+    access-ttl-seconds: 900
+    refresh-ttl-seconds: 604800
+  cookie:
+    secure: false
+  mail:
+    from: noreply@eblog.local
+  email-code:
+    ttl-seconds: 600
+  password-reset:
+    ttl-seconds: 1800
+  worker:
+    interval-seconds: 10
+    batch-size: 10
+  moderation:
+    sensitive-words: spam,adult,gambling,xxx,porn
+    max-external-links: 10
+  upload:
+    max-bytes: 10485760
+  minio:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket-public: eblog-public
+    public-base-url: http://localhost:9000
 
 spring:
   application:
     name: eblog-backend
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eblog}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:}
+    url: jdbc:mysql://localhost:3306/eblog?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: root
+    password: 123456
   flyway:
     enabled: true
     baseline-on-migrate: true
 
   mail:
-    host: ${SMTP_HOST:localhost}
-    port: ${SMTP_PORT:587}
-    username: ${SMTP_USER:}
-    password: ${SMTP_PASSWORD:}
+    host: localhost
+    port: 587
+    username:
+    password:
     properties:
       mail:
         smtp:
@@ -36,16 +64,6 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui
-
-# Moderation worker configuration
-worker:
-  interval-seconds: ${WORKER_INTERVAL_SECONDS:10}
-  batch-size: ${WORKER_BATCH_SIZE:10}
-
-# Moderation rules
-moderation:
-  sensitive-words: ${MODERATION_SENSITIVE_WORDS:spam,adult,gambling,xxx,porn}
-  max-external-links: ${MODERATION_MAX_EXTERNAL_LINKS:10}
 
 logging:
   file:

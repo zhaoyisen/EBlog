@@ -40,8 +40,8 @@ public class AuthController {
       RefreshTokenMapper refreshTokenMapper,
       LoginRateLimiter loginRateLimiter,
       AuthService authService,
-      @Value("${JWT_REFRESH_TTL_SECONDS:604800}") long refreshTtlSeconds,
-      @Value("${COOKIE_SECURE:false}") boolean cookieSecure) {
+      @Value("${app.jwt.refresh-ttl-seconds}") long refreshTtlSeconds,
+      @Value("${app.cookie.secure}") boolean cookieSecure) {
     this.jwtService = jwtService;
     this.userMapper = userMapper;
     this.refreshTokenMapper = refreshTokenMapper;

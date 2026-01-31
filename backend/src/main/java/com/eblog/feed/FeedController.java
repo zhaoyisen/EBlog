@@ -17,7 +17,7 @@ public class FeedController {
   private final PostMapper postMapper;
   private final String baseUrl;
 
-  public FeedController(PostMapper postMapper, @Value("${BASE_URL:http://localhost:3000}") String baseUrl) {
+  public FeedController(PostMapper postMapper, @Value("${app.base-url}") String baseUrl) {
     this.postMapper = postMapper;
     this.baseUrl = baseUrl;
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { appConfig } from "../../../config/appConfig";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -14,7 +15,7 @@ type Category = {
 };
 
 function apiUrl(path: string) {
-  const baseRaw = process.env.NEXT_PUBLIC_API_BASE ?? "";
+  const baseRaw = appConfig.apiBase;
   const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
   const prefix = base === "/api" ? "" : base;
   return `${prefix}${path}`;

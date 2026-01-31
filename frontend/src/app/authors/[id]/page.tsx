@@ -1,3 +1,5 @@
+import { appConfig } from "../../../config/appConfig";
+
 type ApiResponse<T> = {
   success: boolean;
   data?: T;
@@ -13,10 +15,9 @@ type AuthorView = {
 };
 
 function apiUrl(path: string) {
-  const baseRaw = process.env.NEXT_PUBLIC_API_BASE ?? "";
+  const baseRaw = appConfig.internalApiBase;
   const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
-  const prefix = base === "/api" ? "" : base;
-  return `${prefix}${path}`;
+  return `${base}${path}`;
 }
 
 export default async function AuthorPage({ params }: { params: Promise<{ id: string }> }) {

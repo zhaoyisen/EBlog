@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { appConfig } from "../../config/appConfig";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -9,7 +11,7 @@ type ApiResponse<T> = {
 };
 
 function apiUrl(path: string) {
-  const baseRaw = process.env.NEXT_PUBLIC_API_BASE ?? "";
+  const baseRaw = appConfig.apiBase;
   const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
   const prefix = base === "/api" ? "" : base;
   return `${prefix}${path}`;
@@ -47,13 +49,11 @@ export default function LoginPage() {
       });
 
       const json = (await res.json()) as ApiResponse<{
-        access_token: string;
-        refresh_token: string;
+        accessToken: string;
       }>;
 
       if (json?.success && json.data) {
-        localStorage.setItem("access_token", json.data.access_token);
-        localStorage.setItem("refresh_token", json.data.refresh_token);
+        localStorage.setItem("access_token", json.data.accessToken);
         setSuccess(true);
         setTimeout(() => {
           window.location.href = "/";
@@ -66,12 +66,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function onLogout() {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    window.location.href = "/login";
   }
 
   // 检查是否已登录
@@ -146,6 +140,13 @@ export default function LoginPage() {
               {loading ? "登录中..." : "登录"}
             </button>
           </form>
+        </div>
+
+        <div className="mt-4 text-center text-sm text-neutral-600">
+          还没有账号？
+          <Link href="/register" className="ml-2 text-zinc-900 hover:underline">
+            去注册
+          </Link>
         </div>
       </div>
     </main>
