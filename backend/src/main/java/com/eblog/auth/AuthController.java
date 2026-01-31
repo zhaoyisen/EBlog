@@ -171,7 +171,7 @@ public class AuthController {
         .httpOnly(true)
         .secure(cookieSecure)
         .sameSite("Strict")
-        .path("/api/v1/auth")
+        .path("/")
         .maxAge(maxAgeSeconds)
         .build();
     response.addHeader("Set-Cookie", cookie.toString());
@@ -182,7 +182,7 @@ public class AuthController {
         .httpOnly(true)
         .secure(cookieSecure)
         .sameSite("Strict")
-        .path("/api/v1/auth")
+        .path("/")
         .maxAge(0)
         .build();
     response.addHeader("Set-Cookie", cookie.toString());
