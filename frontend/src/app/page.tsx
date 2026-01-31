@@ -1,6 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAuth } from "../lib/auth/AuthProvider";
 
 export default function Home() {
+  const { accessToken, ready, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    if (!ready) {
+      setLoggingOut(false);
+    }
+  }, [ready]);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await logout();
+    window.location.href = "/";
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(1200px_circle_at_20%_10%,theme(colors.slate.200),transparent_55%),radial-gradient(900px_circle_at_80%_20%,theme(colors.amber.200),transparent_50%),linear-gradient(to_bottom,theme(colors.zinc.50),theme(colors.zinc.100))]">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-5">
@@ -20,9 +39,28 @@ export default function Home() {
           <Link className="rounded-full px-3 py-2 text-zinc-700 hover:bg-white/70" href="/authors">
             作者
           </Link>
-          <Link className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-zinc-50 hover:bg-zinc-800" href="/login">
-            登录
-          </Link>
+          {ready && accessToken ? (
+            <>
+              <Link
+                className="rounded-full border border-zinc-200 bg-white/70 px-4 py-2 font-medium text-zinc-900 hover:bg-white"
+                href="/profile"
+              >
+                个人中心
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-zinc-50 hover:bg-zinc-800 disabled:opacity-70"
+                disabled={loggingOut}
+              >
+                {loggingOut ? "退出中" : "登出"}
+              </button>
+            </>
+          ) : (
+            <Link className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-zinc-50 hover:bg-zinc-800" href="/login">
+              登录
+            </Link>
+          )}
         </nav>
       </header>
 

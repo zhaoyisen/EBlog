@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appConfig } from "../../../config/appConfig";
+import { sanitizeProxyHeaders } from "../../../lib/http/sanitizeProxyHeaders";
 
 type RouteParams = {
   params: Promise<{ path: string[] }>;
@@ -31,10 +32,8 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   });
 
   // 需要特别处理 set-cookie：多条 cookie 不能被合并为单一 header。
-  response.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "set-cookie") {
-      return;
-    }
+  const sanitizedHeaders = sanitizeProxyHeaders(response.headers);
+  sanitizedHeaders.forEach((value, key) => {
     nextRes.headers.set(key, value);
   });
 
