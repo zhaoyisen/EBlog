@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const warmUpCsrf = useCallback(async () => {
     try {
-      await fetch(apiUrl("/api/v1/health"), { cache: "no-store", credentials: "include" });
+      await fetch(apiUrl("/api/v1/auth/csrf"), { cache: "no-store", credentials: "include" });
     } catch {
       // 忽略：离线或后端未启动时不阻断页面。
     }

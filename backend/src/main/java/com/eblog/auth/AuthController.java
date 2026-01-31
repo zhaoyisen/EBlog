@@ -15,10 +15,12 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -49,6 +51,11 @@ public class AuthController {
     this.authService = authService;
     this.refreshTtlSeconds = refreshTtlSeconds;
     this.cookieSecure = cookieSecure;
+  }
+
+  @GetMapping("/csrf")
+  public ApiResponse<CsrfToken> csrf(CsrfToken token) {
+    return ApiResponse.ok(token);
   }
 
   @PostMapping("/login")

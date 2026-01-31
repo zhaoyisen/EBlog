@@ -1,6 +1,8 @@
 package com.eblog.auth;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,5 +24,13 @@ class SecurityConfigTest {
     mockMvc.perform(post("/api/v1/auth/refresh"))
         .andExpect(status().is4xxClientError())
         .andExpect(header().doesNotExist("WWW-Authenticate"));
+  }
+
+  @Test
+  void csrfEndpointSetsCookie() throws Exception {
+    mockMvc.perform(get("/api/v1/auth/csrf"))
+        .andExpect(status().isOk())
+        .andExpect(cookie().exists("XSRF-TOKEN"))
+        .andExpect(cookie().path("XSRF-TOKEN", "/"));
   }
 }
