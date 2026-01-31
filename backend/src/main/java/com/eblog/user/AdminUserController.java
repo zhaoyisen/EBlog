@@ -37,7 +37,9 @@ public class AdminUserController {
   public ApiResponse<List<UserListItem>> listUsers(
       @RequestParam(defaultValue = "20") int limit,
       @RequestParam(defaultValue = "0") int offset) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
 
     LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(UserEntity::getCreatedAt);
@@ -50,7 +52,9 @@ public class AdminUserController {
 
   @PostMapping("/ban/{userId}")
   public ApiResponse<Void> banUser(@PathVariable Long userId, @RequestBody BanRequest request) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
 
     UserEntity user = userMapper.selectById(userId);
     if (user == null) {
@@ -70,7 +74,9 @@ public class AdminUserController {
 
   @PostMapping("/unban/{userId}")
   public ApiResponse<Void> unbanUser(@PathVariable Long userId) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
 
     UserEntity user = userMapper.selectById(userId);
     if (user == null) {
@@ -90,12 +96,6 @@ public class AdminUserController {
     refreshTokenMapper.delete(new LambdaQueryWrapper<com.eblog.auth.RefreshTokenEntity>()
       .eq(com.eblog.auth.RefreshTokenEntity::getUserId, userId)
     );
-  }
-
-  private void ensureAdmin() {
-    if (!isAdmin()) {
-      throw new RuntimeException("Admin access required");
-    }
   }
 
   private boolean isAdmin() {

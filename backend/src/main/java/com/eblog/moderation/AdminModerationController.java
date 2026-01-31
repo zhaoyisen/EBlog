@@ -2,7 +2,8 @@
 
  import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
  import com.eblog.api.common.ApiResponse;
- import com.eblog.moderation.entity.AuditLogEntity;
+import com.eblog.api.common.ErrorCode;
+import com.eblog.moderation.entity.AuditLogEntity;
  import com.eblog.moderation.enums.AuditAction;
  import com.eblog.moderation.enums.ModerationStatus;
  import com.eblog.moderation.mapper.OutboxMapper;
@@ -51,7 +52,9 @@ public class AdminModerationController {
   public ApiResponse<List<ModerationItem>> getReviewQueue(
       @RequestParam(defaultValue = "20") int limit,
       @RequestParam(defaultValue = "0") int offset) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
 
     List<PostEntity> posts = moderationService.getPostsNeedingReview(limit, offset);
     List<ModerationItem> items = posts.stream()
@@ -63,14 +66,18 @@ public class AdminModerationController {
 
   @PostMapping("/approve/{postId}")
   public ApiResponse<Void> approvePost(@PathVariable Long postId, @RequestBody ModerationRequest request) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
     moderationService.manualModerate(postId, AuditAction.APPROVE, request.getReason(), currentUserId());
     return ApiResponse.ok(null);
   }
 
   @PostMapping("/reject/{postId}")
   public ApiResponse<Void> rejectPost(@PathVariable Long postId, @RequestBody ModerationRequest request) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
     moderationService.manualModerate(postId, AuditAction.REJECT, request.getReason(), currentUserId());
     return ApiResponse.ok(null);
   }
@@ -80,7 +87,9 @@ public class AdminModerationController {
       @RequestParam(required = false) String entityType,
       @RequestParam(required = false) Long entityId,
       @RequestParam(defaultValue = "50") int limit) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
 
     List<AuditLogEntity> logs = moderationService.getAuditLogs(entityType, entityId, limit);
     return ApiResponse.ok(logs);
@@ -90,7 +99,9 @@ public class AdminModerationController {
   public ApiResponse<List<CommentModerationItem>> getCommentReviewQueue(
       @RequestParam(defaultValue = "20") int limit,
       @RequestParam(defaultValue = "0") int offset) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
 
     List<CommentEntity> comments = moderationService.getCommentsNeedingReview(limit, offset);
     List<CommentModerationItem> items = comments.stream()
@@ -102,22 +113,20 @@ public class AdminModerationController {
 
   @PostMapping("/approve/comment/{commentId}")
   public ApiResponse<Void> approveComment(@PathVariable Long commentId, @RequestBody ModerationRequest request) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
     moderationService.manualModerateComment(commentId, AuditAction.APPROVE, request.getReason(), currentUserId());
     return ApiResponse.ok(null);
   }
 
   @PostMapping("/reject/comment/{commentId}")
   public ApiResponse<Void> rejectComment(@PathVariable Long commentId, @RequestBody ModerationRequest request) {
-    ensureAdmin();
+    if (!isAdmin()) {
+      return ApiResponse.fail(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
     moderationService.manualModerateComment(commentId, AuditAction.REJECT, request.getReason(), currentUserId());
     return ApiResponse.ok(null);
-  }
-
-  private void ensureAdmin() {
-    if (!isAdmin()) {
-      throw new RuntimeException("Admin access required");
-    }
   }
 
   private boolean isAdmin() {
