@@ -1,28 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { appConfig } from "../../config/appConfig";
-
-type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: { code: string; message: string };
-};
-
-function apiUrl(path: string) {
-  const baseRaw = appConfig.apiBase;
-  const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
-  const prefix = base === "/api" ? "" : base;
-  return `${prefix}${path}`;
-}
+import { useAuth } from "../../lib/auth/AuthProvider";
 
 export default function LoginPage() {
+  const { accessToken, ready, loginWithPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (ready && accessToken) {
+      window.location.href = "/";
+    }
+  }, [accessToken, ready]);
 
   async function onLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -37,42 +31,19 @@ export default function LoginPage() {
     setSuccess(false);
 
     try {
-      const res = await fetch(apiUrl("/api/v1/auth/login"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          password: password.trim(),
-        }),
-      });
-
-      const json = (await res.json()) as ApiResponse<{
-        accessToken: string;
-      }>;
-
-      if (json?.success && json.data) {
-        localStorage.setItem("access_token", json.data.accessToken);
+      const result = await loginWithPassword(email, password);
+      if (result.ok) {
         setSuccess(true);
         setTimeout(() => {
           window.location.href = "/";
         }, 1000);
       } else {
-        setError(json?.error?.message ?? "登录失败");
+        setError(result.message ?? "登录失败");
       }
     } catch {
       setError("暂时无法登录");
     } finally {
       setLoading(false);
-    }
-  }
-
-  // 检查是否已登录
-  if (typeof window !== "undefined") {
-    const accessToken = localStorage.getItem("access_token");
-    if (accessToken) {
-      window.location.href = "/";
     }
   }
 

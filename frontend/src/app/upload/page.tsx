@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { appConfig } from "../../config/appConfig";
+import { useAuth } from "../../lib/auth/AuthProvider";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -18,27 +18,27 @@ type PresignResponse = {
   maxBytes: number;
 };
 
-function apiUrl(path: string) {
-  const baseRaw = appConfig.apiBase;
-  const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
-  const prefix = base === "/api" ? "" : base;
-  return `${prefix}${path}`;
-}
-
 export default function UploadPage() {
-  const [token, setToken] = React.useState<string>("");
+  const { accessToken, ready, apiFetch } = useAuth();
+
   const [file, setFile] = React.useState<File | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [log, setLog] = React.useState<string>("");
   const [publicUrl, setPublicUrl] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (ready && !accessToken) {
+      window.location.href = "/login";
+    }
+  }, [accessToken, ready]);
 
   async function onUpload() {
     if (!file) {
       setLog("请选择文件");
       return;
     }
-    if (!token.trim()) {
-      setLog("请粘贴 Access Token（JWT）");
+    if (!ready || !accessToken) {
+      setLog("请先登录");
       return;
     }
 
@@ -47,11 +47,10 @@ export default function UploadPage() {
     setPublicUrl("");
 
     try {
-      const presignRes = await fetch(apiUrl("/api/v1/uploads/presign"), {
+      const presignRes = await apiFetch("/api/v1/uploads/presign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token.trim()}`,
         },
         body: JSON.stringify({
           filename: file.name,
@@ -96,18 +95,10 @@ export default function UploadPage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">上传</h1>
-          <p className="mt-1 text-sm text-neutral-600">MVP：用 Access Token 生成预签名 URL（MinIO）</p>
+          <p className="mt-1 text-sm text-neutral-600">MVP：登录后生成预签名 URL（MinIO）</p>
         </div>
 
         <div className="rounded-3xl border border-black/10 bg-white/70 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] backdrop-blur">
-          <label className="block text-sm font-medium text-neutral-900">Access Token</label>
-          <input
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Bearer 后面的 accessToken（JWT）"
-            className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none"
-          />
-
           <label className="mt-5 block text-sm font-medium text-neutral-900">文件</label>
           <input
             type="file"

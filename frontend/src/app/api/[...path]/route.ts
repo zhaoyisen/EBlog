@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { appConfig } from "../../../config/appConfig";
 
 type RouteParams = {
-  params: { path: string[] };
+  params: Promise<{ path: string[] }>;
 };
 
 async function proxy(request: NextRequest, params: { path: string[] }) {
@@ -25,30 +25,51 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   }
 
   const response = await fetch(target, init);
-  const responseHeaders = new Headers(response.headers);
 
-  return new NextResponse(await response.arrayBuffer(), {
+  const nextRes = new NextResponse(await response.arrayBuffer(), {
     status: response.status,
-    headers: responseHeaders,
   });
+
+  // 需要特别处理 set-cookie：多条 cookie 不能被合并为单一 header。
+  response.headers.forEach((value, key) => {
+    if (key.toLowerCase() === "set-cookie") {
+      return;
+    }
+    nextRes.headers.set(key, value);
+  });
+
+  const getSetCookie = (response.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie;
+  const setCookies = getSetCookie ? getSetCookie.call(response.headers) : [];
+  if (setCookies.length > 0) {
+    for (const cookie of setCookies) {
+      nextRes.headers.append("set-cookie", cookie);
+    }
+  } else {
+    const single = response.headers.get("set-cookie");
+    if (single) {
+      nextRes.headers.set("set-cookie", single);
+    }
+  }
+
+  return nextRes;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  return proxy(request, params);
+  return proxy(request, await params);
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  return proxy(request, params);
+  return proxy(request, await params);
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  return proxy(request, params);
+  return proxy(request, await params);
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  return proxy(request, params);
+  return proxy(request, await params);
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  return proxy(request, params);
+  return proxy(request, await params);
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Noto_Sans_SC } from "next/font/google";
+import { AuthProvider } from "../lib/auth/AuthProvider";
 import "./globals.css";
 
 const notoSansSc = Noto_Sans_SC({
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={`${notoSansSc.variable} ${jetbrainsMono.variable} antialiased`}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

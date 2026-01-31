@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { appConfig } from "../../../config/appConfig";
+import { useAuth } from "../../../lib/auth/AuthProvider";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -14,14 +14,9 @@ type Category = {
   name: string;
 };
 
-function apiUrl(path: string) {
-  const baseRaw = appConfig.apiBase;
-  const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
-  const prefix = base === "/api" ? "" : base;
-  return `${prefix}${path}`;
-}
-
 export default function PostNewPage() {
+  const { accessToken, ready, apiFetch } = useAuth();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -31,9 +26,14 @@ export default function PostNewPage() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
+    if (ready && !accessToken) {
+      window.location.href = "/login";
+      return;
+    }
+
     async function loadCategories() {
       try {
-        const res = await fetch(apiUrl("/api/v1/categories"), { cache: "no-store" });
+        const res = await apiFetch("/api/v1/categories", { cache: "no-store" });
         const json = (await res.json()) as ApiResponse<Category[]>;
         if (json?.success && json.data) {
           setCategories(json.data);
@@ -44,7 +44,7 @@ export default function PostNewPage() {
     }
 
     loadCategories();
-  }, []);
+  }, [accessToken, apiFetch, ready]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,7 +58,12 @@ export default function PostNewPage() {
     setError("");
 
     try {
-      const res = await fetch(apiUrl("/api/v1/posts"), {
+      if (!ready || !accessToken) {
+        setError("请先登录");
+        return;
+      }
+
+      const res = await apiFetch("/api/v1/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

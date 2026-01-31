@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { appConfig } from "../../config/appConfig";
+import React, { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../../lib/auth/AuthProvider";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -17,14 +17,9 @@ type UserView = {
   createdAt: string;
 };
 
-function apiUrl(path: string) {
-  const baseRaw = appConfig.apiBase;
-  const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
-  const prefix = base === "/api" ? "" : base;
-  return `${prefix}${path}`;
-}
-
 export default function ProfilePage() {
+  const { accessToken, ready, apiFetch, logout } = useAuth();
+
   const [view, setView] = useState<"view" | "edit">("view");
   const [nickname, setNickname] = useState("");
   const [bio, setBio] = useState("");
@@ -36,26 +31,12 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [showPasswordSection, setShowPasswordSection] = useState(false);
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem("access_token");
-    if (!accessToken) {
-      window.location.href = "/login";
-      return;
-    }
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch(apiUrl("/api/v1/me"), {
-        cache: "no-store",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
+      const res = await apiFetch("/api/v1/me", { cache: "no-store" });
       const json = (await res.json()) as ApiResponse<UserView>;
       if (json?.success && json.data) {
         setNickname(json.data.nickname || "");
@@ -69,7 +50,18 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiFetch]);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    if (!accessToken) {
+      window.location.href = "/login";
+      return;
+    }
+    void fetchProfile();
+  }, [accessToken, fetchProfile, ready]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,11 +74,10 @@ export default function ProfilePage() {
     setError("");
 
     try {
-      const uploadRes = await fetch(apiUrl("/api/v1/uploads/presign"), {
+      const uploadRes = await apiFetch("/api/v1/uploads/presign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
         body: JSON.stringify({
           filename: file.name,
@@ -124,11 +115,10 @@ export default function ProfilePage() {
     setError("");
 
     try {
-      const res = await fetch(apiUrl("/api/v1/me"), {
+      const res = await apiFetch("/api/v1/me", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
         body: JSON.stringify({
           nickname: nickname.trim(),
@@ -167,11 +157,10 @@ export default function ProfilePage() {
     setError("");
 
     try {
-      const res = await fetch(apiUrl("/api/v1/me/password"), {
+      const res = await apiFetch("/api/v1/me/password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
         body: JSON.stringify({
           current_password: currentPassword,
@@ -179,7 +168,7 @@ export default function ProfilePage() {
         }),
       });
 
-      const json = await res.json() as ApiResponse<unknown>;
+      const json = (await res.json()) as ApiResponse<unknown>;
       if (json?.success) {
         setError("密码修改成功");
         setShowPasswordSection(false);
@@ -197,9 +186,10 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    window.location.href = "/login";
+    void (async () => {
+      await logout();
+      window.location.href = "/login";
+    })();
   };
 
   return (
