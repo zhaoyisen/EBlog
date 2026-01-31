@@ -50,3 +50,7 @@
 - `appConfig.internalApiBase`：服务端请求后端的基地址（示例：`http://localhost:8080`）
 - `appConfig.apiProxyTarget`：Next dev rewrites 代理目标（示例：`http://localhost:8080`）
 - `appConfig.siteUrl`：站点 URL（示例：`http://localhost:3000`）
+
+## 验证记录
+
+- 2026-01-31：本地联调通过，前端代理调用 `/api/v1/auth/email-code/send-register` 返回 `success=true`。

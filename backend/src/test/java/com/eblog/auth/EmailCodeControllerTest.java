@@ -40,4 +40,44 @@ class EmailCodeControllerTest {
 
     verify(emailCodeService).sendRegisterCode("test@example.com");
   }
+
+  @Test
+  void sendRegisterWhenRateLimitedReturnsFail() throws Exception {
+    when(rateLimiter.tryConsume(anyString())).thenReturn(false);
+
+    mockMvc.perform(post("/api/v1/auth/email-code/send-register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"email\":\"test@example.com\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.error.code").value("RATE_LIMITED"));
+
+    verify(emailCodeService, org.mockito.Mockito.never()).sendRegisterCode(anyString());
+  }
+
+  @Test
+  void sendRegisterNormalizesEmailBeforeCallingService() throws Exception {
+    when(rateLimiter.tryConsume(anyString())).thenReturn(true);
+
+    mockMvc.perform(post("/api/v1/auth/email-code/send-register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"email\":\"  TeSt@Example.COM  \"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true));
+
+    verify(emailCodeService).sendRegisterCode("test@example.com");
+  }
+
+  @Test
+  void sendRegisterSkipsServiceWhenEmailInvalid() throws Exception {
+    when(rateLimiter.tryConsume(anyString())).thenReturn(true);
+
+    mockMvc.perform(post("/api/v1/auth/email-code/send-register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"email\":\"invalid\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true));
+
+    verify(emailCodeService, org.mockito.Mockito.never()).sendRegisterCode(anyString());
+  }
 }
