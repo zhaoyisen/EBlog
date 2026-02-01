@@ -45,6 +45,32 @@ public class PostController {
       s.tagsCsv = p.getTagsCsv();
       s.category = p.getCategory();
       s.createdAt = p.getCreatedAt();
+      s.status = p.getStatus();
+      res.add(s);
+    }
+    return ApiResponse.ok(res);
+  }
+
+  @GetMapping("/my")
+  public ApiResponse<List<MyPostSummary>> listMy(
+      @RequestParam(name = "limit", required = false, defaultValue = "20") int limit,
+      @RequestParam(name = "offset", required = false, defaultValue = "0") int offset) {
+    Long userId = currentUserId();
+    if (userId == null) {
+      return ApiResponse.fail(ErrorCode.UNAUTHORIZED.getCode(), ErrorCode.UNAUTHORIZED.getMessage());
+    }
+    List<PostEntity> posts = postService.listMy(userId, limit, offset);
+    List<MyPostSummary> res = new ArrayList<>();
+    for (PostEntity p : posts) {
+      MyPostSummary s = new MyPostSummary();
+      s.id = p.getId();
+      s.title = p.getTitle();
+      s.slug = p.getSlug();
+      s.summary = p.getSummary();
+      s.category = p.getCategory();
+      s.status = p.getStatus();
+      s.createdAt = p.getCreatedAt();
+      s.updatedAt = p.getUpdatedAt();
       res.add(s);
     }
     return ApiResponse.ok(res);
@@ -184,6 +210,18 @@ public class PostController {
     public String tagsCsv;
     public String category;
     public LocalDateTime createdAt;
+    public String status;
+  }
+
+  public static class MyPostSummary {
+    public Long id;
+    public String title;
+    public String slug;
+    public String summary;
+    public String category;
+    public String status;
+    public LocalDateTime createdAt;
+    public LocalDateTime updatedAt;
   }
 
   public static class PostDetail {

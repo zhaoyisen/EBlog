@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../lib/auth/AuthProvider";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 // 动态导入 ByteMDEditor 以避免 SSR 问题 (编辑器依赖 window)
 const ByteMDEditor = dynamic(() => import("../../../components/ByteMDEditor"), {
@@ -20,8 +21,20 @@ type ApiResponse<T> = {
   error?: { code: string; message: string };
 };
 
-export default function PostNewPage() {
+type PostDetail = {
+  id: number;
+  title: string;
+  summary: string;
+  contentMarkdown: string;
+  tagsCsv: string;
+  category: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  format: string;
+};
+
+export default function PostEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { accessToken, ready, apiFetch } = useAuth();
+  const [postId, setPostId] = useState<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
@@ -29,58 +42,52 @@ export default function PostNewPage() {
   const [category, setCategory] = useState("");
   const [tagsCsv, setTagsCsv] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [draftLoaded, setDraftLoaded] = useState(false);
 
-  // 自动保存 key
-  const DRAFT_KEY = "post_draft_new";
-
-  // 加载草稿
+  // 提取 params.id
   useEffect(() => {
-    if (typeof window !== "undefined" && !draftLoaded) {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) {
-        try {
-          const draft = JSON.parse(saved);
-          // 简单的确认，避免无意覆盖用户刚输入的内容（虽然这里是初始化）
-          // 但因为 Next.js 的 Fast Refresh，这里可能会多次触发，所以加个标记
-          if (
-            (draft.title || draft.content) && // 确保草稿有内容
-            confirm("发现未发布的草稿，是否恢复？")
-          ) {
-            setTitle(draft.title || "");
-            setSummary(draft.summary || "");
-            setContent(draft.content || "");
-            setCategory(draft.category || "");
-            setTagsCsv(draft.tagsCsv || "");
-          } else {
-             localStorage.removeItem(DRAFT_KEY);
-          }
-        } catch (e) {
-          console.error("Failed to parse draft", e);
-        }
-      }
-      setDraftLoaded(true);
-    }
-  }, [draftLoaded]);
+    void (async () => {
+      const resolvedParams = await params;
+      setPostId(parseInt(resolvedParams.id, 10));
+    })();
+  }, [params]);
 
-  // 自动保存
+  // 加载文章数据
   useEffect(() => {
-    if (!draftLoaded) return;
-    const timer = setTimeout(() => {
-      const draft = { title, summary, content, category, tagsCsv };
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    }, 1000); // 1秒防抖
-    return () => clearTimeout(timer);
-  }, [title, summary, content, category, tagsCsv, draftLoaded]);
-
-  useEffect(() => {
-    if (ready && !accessToken) {
+    if (!ready) return;
+    if (!accessToken) {
       window.location.href = "/login";
       return;
     }
-  }, [accessToken, ready]);
+
+    if (!postId) return;
+
+    const loadPost = async () => {
+      setPageLoading(true);
+      try {
+        const res = await apiFetch(`/api/v1/posts/${postId}`, { cache: "no-store" });
+        const json = (await res.json()) as ApiResponse<PostDetail>;
+        if (json?.success && json.data) {
+          const post = json.data;
+          setTitle(post.title || "");
+          setSummary(post.summary || "");
+          setContent(post.contentMarkdown || "");
+          setCategory(post.category || "");
+          setTagsCsv(post.tagsCsv || "");
+        } else {
+          setError(json?.error?.message ?? "加载文章失败");
+        }
+      } catch {
+        setError("加载文章失败");
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    void loadPost();
+  }, [ready, accessToken, postId, apiFetch]);
 
   const uploadImages = async (files: File[]) => {
     if (!accessToken) {
@@ -110,7 +117,6 @@ export default function PostNewPage() {
           const { uploadUrl, publicUrl } = presignJson.data;
 
           // 2. 上传文件到 MinIO (通过预签名 URL)
-          // 注意：这里直接使用 fetch PUT 到 uploadUrl，不带 API Token
           await fetch(uploadUrl, {
             method: "PUT",
             body: file,
@@ -134,57 +140,6 @@ export default function PostNewPage() {
     }
   };
 
-  // 保存草稿到后端
-  async function saveDraft() {
-    if (!title.trim() || !content.trim()) {
-      setError("标题和内容不能为空才能保存草稿");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      if (!ready || !accessToken) {
-        setError("请先登录");
-        return;
-      }
-
-      const res = await apiFetch("/api/v1/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          summary: summary.trim(),
-          contentMarkdown: content.trim(),
-          tagsCsv: tagsCsv.trim(),
-          category: category.trim(),
-          status: "DRAFT",
-          format: "MARKDOWN",
-        }),
-      });
-
-      const json = (await res.json()) as ApiResponse<{ postId: number; slug: string }>;
-      if (json?.success && json.data) {
-        // 草稿保存成功，清除本地草稿
-        localStorage.removeItem(DRAFT_KEY);
-        setSuccessMsg("草稿已保存");
-        const postId = json.data.postId;
-        setTimeout(() => {
-          window.location.href = `/posts/${postId}/edit`;
-        }, 1500);
-      } else {
-        setError(json?.error?.message ?? "保存草稿失败");
-      }
-    } catch {
-      setError("保存草稿失败");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -202,8 +157,8 @@ export default function PostNewPage() {
         return;
       }
 
-      const res = await apiFetch("/api/v1/posts", {
-        method: "POST",
+      const res = await apiFetch(`/api/v1/posts/${postId}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -218,31 +173,112 @@ export default function PostNewPage() {
         }),
       });
 
-      const json = (await res.json()) as ApiResponse<{ postId: number; slug: string }>;
+      const json = (await res.json()) as ApiResponse<{ slug: string }>;
       if (json?.success && json.data) {
-        // 发布成功，清除草稿
-        localStorage.removeItem(DRAFT_KEY);
-        window.location.href = `/posts/${json.data.slug}`;
+        const slug = json.data.slug;
+        setSuccessMsg("文章已发布");
+        setTimeout(() => {
+          window.location.href = `/posts/${slug}`;
+        }, 1500);
       } else {
-        setError(json?.error?.message ?? "发布文章失败");
+        setError(json?.error?.message ?? "更新文章失败");
       }
     } catch {
-      setError("发布文章失败");
+      setError("更新文章失败");
     } finally {
       setLoading(false);
     }
   }
 
+  async function saveDraft() {
+    if (!title.trim() || !content.trim()) {
+      setError("标题和内容不能为空");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await apiFetch(`/api/v1/posts/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          summary: summary.trim(),
+          contentMarkdown: content.trim(),
+          tagsCsv: tagsCsv.trim(),
+          category: category.trim(),
+          status: "DRAFT",
+          format: "MARKDOWN",
+        }),
+      });
+
+      const json = (await res.json()) as ApiResponse<null>;
+      if (json?.success) {
+        setSuccessMsg("草稿已保存");
+        setTimeout(() => setSuccessMsg(""), 3000);
+      } else if (json?.error) {
+        setError(json.error.message ?? "保存草稿失败");
+      } else {
+        setError("保存草稿失败");
+      }
+    } catch {
+      setError("保存草稿失败");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (pageLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-neutral-50/50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-neutral-900"></div>
+      </div>
+    );
+  }
+
+  if (error && !title) {
+    return (
+      <main className="min-h-[calc(100vh-4rem)] bg-neutral-50/50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-900">编辑文章</h1>
+          </div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
+            <p className="text-rose-700">{error}</p>
+            <Link href="/profile" className="mt-4 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800">
+              返回我的文章
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-neutral-50/50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-            创建新文章
-          </h1>
-          <p className="mt-2 text-neutral-600">
-            分享你的知识和见解。支持 Markdown 格式。
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+              编辑文章
+            </h1>
+            <p className="mt-2 text-neutral-600">
+              修改你的文章内容。支持 Markdown 格式。
+            </p>
+          </div>
+          <Link
+            href="/profile"
+            className="inline-flex items-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            返回我的文章
+          </Link>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
@@ -372,10 +408,10 @@ export default function PostNewPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      发布中...
+                      更新中...
                     </>
                   ) : (
-                    "发布文章"
+                    "更新发布"
                   )}
                 </button>
               </div>

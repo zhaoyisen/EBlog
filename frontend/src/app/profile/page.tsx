@@ -21,11 +21,24 @@ type UserView = {
 
 type TabId = "profile" | "posts" | "settings";
 
+type MyPostView = {
+  id: number;
+  title: string;
+  slug: string;
+  summary: string;
+  category: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  createdAt: string;
+  updatedAt: string;
+};
+
 export default function ProfilePage() {
   const { accessToken, ready, apiFetch, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [user, setUser] = useState<UserView | null>(null);
+  const [myPosts, setMyPosts] = useState<MyPostView[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
   
   // Edit Profile State
   const [nickname, setNickname] = useState("");
@@ -62,6 +75,21 @@ export default function ProfilePage() {
     }
   }, [apiFetch]);
 
+  const fetchMyPosts = useCallback(async () => {
+    setPostsLoading(true);
+    try {
+      const res = await apiFetch("/api/v1/posts/my?limit=50", { cache: "no-store" });
+      const json = (await res.json()) as ApiResponse<MyPostView[]>;
+      if (json?.success && json.data) {
+        setMyPosts(json.data);
+      }
+    } catch {
+      console.error("Failed to fetch posts");
+    } finally {
+      setPostsLoading(false);
+    }
+  }, [apiFetch]);
+
   useEffect(() => {
     if (!ready) return;
     if (!accessToken) {
@@ -70,6 +98,12 @@ export default function ProfilePage() {
     }
     void fetchProfile();
   }, [accessToken, fetchProfile, ready]);
+
+  useEffect(() => {
+    if (activeTab === "posts" && ready && accessToken) {
+      void fetchMyPosts();
+    }
+  }, [activeTab, fetchMyPosts, ready, accessToken]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -217,7 +251,7 @@ export default function ProfilePage() {
             </div>
             <label className="absolute bottom-0 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg transition hover:bg-zinc-700">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={loading} />
@@ -317,24 +351,98 @@ export default function ProfilePage() {
 
           {activeTab === "posts" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-zinc-900">暂无文章</h3>
-                <p className="mt-1 text-sm text-zinc-500">您还没有发布任何文章，或者该功能正在开发中。</p>
-                <div className="mt-6">
-                  <Link
-                    href="/posts/new"
-                    className="inline-flex items-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
-                  >
-                    <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    写文章
-                  </Link>
+              {myPosts.length === 0 && !postsLoading ? (
+                <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center">
+                  <svg className="mx-auto h-12 w-12 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-zinc-900">暂无文章</h3>
+                  <p className="mt-1 text-sm text-zinc-500">您还没有发布任何文章。</p>
+                  <div className="mt-6">
+                    <Link
+                      href="/posts/new"
+                      className="inline-flex items-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
+                    >
+                      <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      写文章
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Drafts Section */}
+                  {myPosts.filter(p => p.status === "DRAFT").length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-500 mb-4">草稿 ({myPosts.filter(p => p.status === "DRAFT").length})</h3>
+                      <div className="space-y-3">
+                        {myPosts.filter(p => p.status === "DRAFT").map(post => (
+                          <div key={post.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-zinc-900 truncate">{post.title || "无标题"}</h4>
+                                <p className="mt-1 text-sm text-zinc-500 line-clamp-2">{post.summary || "暂无摘要"}</p>
+                                <div className="mt-2 flex items-center gap-3 text-xs text-zinc-400">
+                                  <span>最后编辑: {new Date(post.updatedAt).toLocaleDateString()}</span>
+                                  {post.category && <span>• {post.category}</span>}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 shrink-0">
+                                <Link
+                                  href={`/posts/edit/${post.id}/edit`}
+                                  className="inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 transition-colors"
+                                >
+                                  编辑
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Published Section */}
+                  {myPosts.filter(p => p.status === "PUBLISHED").length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-500 mb-4">已发布 ({myPosts.filter(p => p.status === "PUBLISHED").length})</h3>
+                      <div className="space-y-3">
+                        {myPosts.filter(p => p.status === "PUBLISHED").map(post => (
+                          <div key={post.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-zinc-900 truncate">{post.title}</h4>
+                                <p className="mt-1 text-sm text-zinc-500 line-clamp-2">{post.summary || "暂无摘要"}</p>
+                                <div className="mt-2 flex items-center gap-3 text-xs text-zinc-400">
+                                  <span>发布于: {new Date(post.createdAt).toLocaleDateString()}</span>
+                                  {post.category && <span>• {post.category}</span>}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 shrink-0">
+                                <Link
+                                  href={`/posts/${post.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 transition-colors"
+                                >
+                                  查看
+                                </Link>
+                                <Link
+                                  href={`/posts/${post.id}/edit`}
+                                  className="inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 transition-colors"
+                                >
+                                  编辑
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

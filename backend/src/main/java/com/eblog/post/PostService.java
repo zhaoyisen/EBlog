@@ -29,6 +29,12 @@ public class PostService {
     return postMapper.listPublic(safeLimit, safeOffset);
   }
 
+  public List<PostEntity> listMy(long authorId, int limit, int offset) {
+    int safeLimit = Math.min(Math.max(limit, 1), 100);
+    int safeOffset = Math.max(offset, 0);
+    return postMapper.listMy(authorId, safeLimit, safeOffset);
+  }
+
   public PostEntity findBySlug(String slug) {
     if (slug == null || slug.trim().isEmpty()) {
       return null;

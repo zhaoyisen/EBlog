@@ -18,4 +18,13 @@ public interface PostMapper extends BaseMapper<PostEntity> {
       LIMIT #{limit} OFFSET #{offset}
       """)
   List<PostEntity> listPublic(@Param("limit") int limit, @Param("offset") int offset);
+
+  @Select("""
+      SELECT id, author_id, format, title, slug, summary, tags_csv, category, status, moderation_status, created_at, updated_at
+      FROM posts
+      WHERE author_id = #{authorId}
+      ORDER BY updated_at DESC
+      LIMIT #{limit} OFFSET #{offset}
+      """)
+  List<PostEntity> listMy(@Param("authorId") long authorId, @Param("limit") int limit, @Param("offset") int offset);
 }
