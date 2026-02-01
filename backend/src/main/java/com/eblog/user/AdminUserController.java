@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/v1/admin/users")
-@ConditionalOnBean({UserMapper.class, RefreshTokenMapper.class})
 public class AdminUserController {
 
   private final UserMapper userMapper;

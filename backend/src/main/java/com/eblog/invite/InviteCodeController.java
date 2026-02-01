@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/admin/invite-codes")
-@ConditionalOnBean({InviteCodeMapper.class, InviteCodeUseMapper.class})
 public class InviteCodeController {
 
   private static final int DEFAULT_LIMIT = 50;

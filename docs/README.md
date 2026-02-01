@@ -15,15 +15,35 @@
 
 ## 本地开发（占位）
 
-说明：当前仓库处于初始化阶段，后续任务会补齐 backend/frontend/infra 的具体可运行脚手架与命令。
-
 依赖：
 - Docker（用于启动 MySQL 与 MinIO）
+- Java 17（后端）
+- Node.js 20+（前端）
 
-预计的启动流程（后续补齐）：
-1. `docker compose -f infra/docker-compose.yml up -d`
-2. 启动后端（后续补齐 Maven/Gradle 命令）
-3. 启动前端（后续补齐 pnpm/npm 命令）
+启动流程：
+
+1. 启动依赖服务（MySQL/MinIO）
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+```
+
+2. 启动后端（Spring Boot）
+
+```bash
+mvn -f backend/pom.xml spring-boot:run
+```
+
+3. 启动前端（Next.js dev）
+
+```bash
+npm -C frontend install
+npm -C frontend run dev
+```
+
+验证（任选其一）：
+- 后端健康检查：`GET http://localhost:8080/api/v1/health`
+- 前端首页：`http://localhost:3000`
 
 ## 目录结构
 

@@ -16,6 +16,11 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const headers = new Headers(request.headers);
   headers.delete("host");
 
+  // Debug outgoing request
+  console.log(`[Proxy Outgoing] ${request.method} ${target}`);
+  console.log(`[Proxy Outgoing] Cookie: ${headers.get("cookie")}`);
+  console.log(`[Proxy Outgoing] X-XSRF-TOKEN: ${headers.get("x-xsrf-token")}`);
+
   const init: RequestInit = {
     method: request.method,
     headers,
@@ -39,6 +44,20 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
 
   const getSetCookie = (response.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie;
   const setCookies = getSetCookie ? getSetCookie.call(response.headers) : [];
+  
+  // Force debug log for cookies
+  console.log(`[Proxy] ${request.method} ${path} -> Backend Status: ${response.status}`);
+  if (setCookies.length > 0) {
+    console.log('[Proxy] Set-Cookies found (via getSetCookie):', setCookies);
+  } else {
+    const single = response.headers.get("set-cookie");
+    if (single) {
+      console.log('[Proxy] Set-Cookie found (via get):', single);
+    } else {
+      console.log('[Proxy] No Set-Cookie header from backend');
+    }
+  }
+
   if (setCookies.length > 0) {
     for (const cookie of setCookies) {
       nextRes.headers.append("set-cookie", cookie);

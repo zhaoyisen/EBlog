@@ -15,7 +15,6 @@
 
 @RestController
 @RequestMapping("/api/v1/posts/{postId}/favorites")
-@ConditionalOnBean(PostFavoriteMapper.class)
 public class PostFavoriteController {
 
   private final InteractionService interactionService;

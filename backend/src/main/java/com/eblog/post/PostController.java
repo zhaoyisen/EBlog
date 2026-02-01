@@ -5,6 +5,9 @@ import com.eblog.api.common.ErrorCode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,9 +53,19 @@ public class PostController {
   @GetMapping("/{slug}")
   public ApiResponse<PostDetail> get(@PathVariable("slug") String slug) {
     PostEntity p = postService.findBySlug(slug);
-    if (p == null || !"PUBLISHED".equalsIgnoreCase(p.getStatus()) || "REJECTED".equalsIgnoreCase(p.getModerationStatus())) {
+    if (p == null) {
       return ApiResponse.fail(ErrorCode.POST_NOT_FOUND.getCode(), ErrorCode.POST_NOT_FOUND.getMessage());
     }
+
+    boolean isPublic = "PUBLISHED".equalsIgnoreCase(p.getStatus()) && !"REJECTED".equalsIgnoreCase(p.getModerationStatus());
+    if (!isPublic) {
+      Long userId = currentUserId();
+      boolean isAuthor = userId != null && userId.equals(p.getAuthorId());
+      if (!isAuthor && !isAdmin()) {
+        return ApiResponse.fail(ErrorCode.POST_NOT_FOUND.getCode(), ErrorCode.POST_NOT_FOUND.getMessage());
+      }
+    }
+
     PostDetail d = new PostDetail();
     d.id = p.getId();
     d.authorId = p.getAuthorId();
@@ -109,6 +122,32 @@ public class PostController {
       return ApiResponse.fail(error.getCode(), error.getMessage());
     }
     return ApiResponse.ok(null);
+  }
+
+  private static Long currentUserId() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || auth.getPrincipal() == null) {
+      return null;
+    }
+    try {
+      return Long.valueOf(String.valueOf(auth.getPrincipal()));
+    } catch (Exception ex) {
+      return null;
+    }
+  }
+
+  private static boolean isAdmin() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || auth.getAuthorities() == null) {
+      return false;
+    }
+    for (GrantedAuthority a : auth.getAuthorities()) {
+      String role = a.getAuthority();
+      if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static class CreateRequest {

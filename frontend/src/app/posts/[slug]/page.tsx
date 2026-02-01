@@ -1,5 +1,7 @@
 import { renderMdxCached } from "../../../lib/mdx/renderMdx";
 import { appConfig } from "../../../config/appConfig";
+import PostInteractions from "./_components/PostInteractions";
+
 
 type ApiResponse<T> = {
   success: boolean;
@@ -47,42 +49,100 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] px-5 py-10">
-      <div className="mx-auto max-w-3xl">
-        {error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</div>
-        ) : post ? (
-          <article className="rounded-3xl border border-black/10 bg-white/70 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] backdrop-blur">
-            <div className="text-xs text-neutral-500">作者 #{post.authorId}</div>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-neutral-900">{post.title}</h1>
-            <p className="mt-3 text-sm text-neutral-700">{post.summary?.trim() ? post.summary : ""}</p>
-            <div className="mt-6 rounded-2xl border border-black/10 bg-white p-4">
-              <div className="text-xs text-neutral-500">正文</div>
+    <main className="min-h-[calc(100vh-4rem)] bg-white pb-20">
+      {error ? (
+        <div className="mx-auto max-w-3xl px-5 py-20">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-900">
+            <p className="font-medium">{error}</p>
+            <a href="/posts" className="mt-4 inline-block text-sm text-rose-700 underline hover:text-rose-800">
+              返回文章列表
+            </a>
+          </div>
+        </div>
+      ) : post ? (
+        <article>
+          {/* Header Section */}
+          <header className="bg-neutral-50/50 border-b border-neutral-100 px-5 py-16 sm:py-24">
+            <div className="mx-auto max-w-3xl text-center">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                {post.category && (
+                  <span className="inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-medium text-white">
+                    {post.category}
+                  </span>
+                )}
+                <span className="text-sm text-neutral-500">
+                  {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}
+                </span>
+              </div>
+              
+              <h1 className="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl leading-tight">
+                {post.title}
+              </h1>
+              
+              {post.summary && (
+                <p className="mt-6 text-lg text-neutral-600 leading-relaxed">
+                  {post.summary}
+                </p>
+              )}
+
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-600 font-medium">
+                  {post.authorId}
+                </div>
+                <span className="text-sm font-medium text-neutral-900">作者 #{post.authorId}</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Content Section */}
+          <div className="mx-auto max-w-3xl px-5 py-12">
+            <div className="prose prose-zinc prose-lg dark:prose-invert max-w-none">
               {String(post.format).toUpperCase() === "MDX" ? (
-                <div className="mt-3">
+                <>
                   {await (async () => {
                     try {
                       const key = `${post.id}:${post.updatedAt ?? ""}`;
                       const node = await renderMdxCached(key, post.contentMarkdown);
-                      return <div className="prose max-w-none">{node}</div>;
+                      return node;
                     } catch {
                       return (
-                        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+                        <div className="not-prose rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
                           这篇文章的 MDX 渲染失败，已安全降级。
+                          <pre className="mt-4 overflow-auto rounded bg-white p-4 text-xs text-neutral-800">
+                            {post.contentMarkdown}
+                          </pre>
                         </div>
                       );
                     }
                   })()}
-                </div>
+                </>
               ) : post.contentHtml?.trim() ? (
-                <div className="prose mt-3 max-w-none" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
+                <div dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
               ) : (
-                <pre className="mt-2 whitespace-pre-wrap text-sm text-neutral-900">{post.contentMarkdown}</pre>
+                <pre className="whitespace-pre-wrap font-mono text-sm">{post.contentMarkdown}</pre>
               )}
             </div>
-          </article>
-        ) : null}
-      </div>
+
+            {/* Tags */}
+            {post.tagsCsv && (
+              <div className="mt-12 pt-8 border-t border-neutral-100">
+                <div className="flex flex-wrap gap-2">
+                  {post.tagsCsv.split(",").filter(Boolean).map((tag) => (
+                    <span key={tag} className="inline-flex items-center rounded-md bg-neutral-100 px-2.5 py-1 text-sm font-medium text-neutral-700">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Interactions */}
+            <div className="mt-12">
+              <PostInteractions postId={post.id} />
+            </div>
+          </div>
+        </article>
+      ) : null}
     </main>
   );
 }

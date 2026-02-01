@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../config/appConfig";
 
@@ -25,7 +26,7 @@ function apiUrl(path: string) {
 }
 
 export default function AuthorsPage() {
-  const pageSize = 10;
+  const pageSize = 12;
 
   const [page, setPage] = useState(0);
   const [authors, setAuthors] = useState<AuthorSummary[] | null>(null);
@@ -66,79 +67,86 @@ export default function AuthorsPage() {
   }, [loadPage]);
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] px-5 py-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-            作者列表
+    <main className="min-h-screen bg-zinc-50/50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
+            探索作者
           </h1>
-          <p className="mt-2 text-sm text-neutral-600">
-            查看所有已注册作者
+          <p className="mt-4 text-lg text-zinc-600">
+            发现优秀的创作者和他们独特的观点
           </p>
         </div>
 
         {error && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-900">
+          <div className="mx-auto max-w-2xl rounded-lg bg-rose-50 p-4 text-center text-sm text-rose-600 border border-rose-100 mb-8">
             {error}
+          </div>
+        )}
+
+        {!loading && !error && authors && authors.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
+            <svg className="h-16 w-16 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <p className="mt-4 text-lg">还没有作者加入</p>
+          </div>
+        )}
+
+        {authors && authors.length > 0 && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {authors.map((author) => (
+              <Link
+                key={author.id}
+                href={`/authors/${author.id}`}
+                className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-zinc-100"
+              >
+                <div className="aspect-[3/2] w-full bg-zinc-100 relative overflow-hidden">
+                  {author.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={author.avatarUrl}
+                      alt={author.nickname || ""}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 text-4xl font-bold text-zinc-400">
+                      {author.nickname?.charAt(0)?.toUpperCase() || "A"}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                </div>
+                
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="text-xl font-bold text-zinc-900 group-hover:text-indigo-600 transition-colors">
+                    {author.nickname || `Author #${author.id}`}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm text-zinc-500 line-clamp-3 leading-relaxed">
+                    {author.bio?.trim() ? author.bio : "这位作者很神秘，还没有写下简介。"}
+                  </p>
+                  <div className="mt-4 flex items-center text-xs font-medium text-zinc-400">
+                    <span>加入于 {new Date(author.createdAt || "").toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-zinc-200"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900"></div>
           </div>
         )}
 
-        {!loading && !error && authors && authors.length === 0 && (
-          <div className="rounded-2xl border border-black/10 bg-white/70 p-6 text-sm text-neutral-700">
-            还没有作者。
-          </div>
-        )}
-
-        {!loading && !error && authors && authors.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {authors.map((author) => (
-              <a
-                key={author.id}
-                href={`/authors/${author.id}`}
-                className="block rounded-2xl border border-black/10 bg-white/70 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_16px_56px_rgba(0,0,0,0.08)]"
-              >
-                <div className="flex items-start gap-4">
-                  {author.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- 远程头像来源不固定，暂不使用 next/image
-                    <img
-                      src={author.avatarUrl}
-                      alt={author.nickname || `Author #${author.id}`}
-                      className="h-16 w-16 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-200 to-rose-200 flex items-center justify-center text-2xl font-bold text-white">
-                      {author.nickname?.charAt(0) || "A"}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-lg font-semibold text-neutral-900">
-                      {author.nickname || `未命名作者 #${author.id}`}
-                    </div>
-                    <div className="text-sm text-neutral-600">
-                      {author.bio?.trim() ? author.bio : "这个作者还没有填写简介。"}
-                    </div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-
-        {!loading && !error && authors && authors.length > 0 && (
-          <div className="mt-8 flex justify-center">
+        {!loading && !error && hasMore && authors && authors.length > 0 && (
+          <div className="mt-12 flex justify-center">
             <button
               type="button"
               onClick={() => void loadPage(page + 1, false)}
-              disabled={loading || !hasMore}
-              className="rounded-xl border border-black/10 bg-zinc-900 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+              className="rounded-full border border-zinc-200 bg-white px-8 py-3 text-sm font-medium text-zinc-900 shadow-sm transition hover:bg-zinc-50 hover:shadow-md active:scale-95"
             >
-              {loading ? "加载中..." : "加载更多"}
+              加载更多作者
             </button>
           </div>
         )}

@@ -3,7 +3,7 @@ package com.eblog.moderation.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 
-@TableName("outbox")
+@TableName("moderation_outbox")
 public class OutboxEntity {
   private Long id;
   private String entityType;
@@ -13,6 +13,8 @@ public class OutboxEntity {
   private LocalDateTime updatedAt;
   private Integer attempts;
   private String lastError;
+  private String deduplicationKey;
+  private LocalDateTime deduplicationKeyUpdatedAt;
 
   public Long getId() {
     return id;
@@ -76,5 +78,21 @@ public class OutboxEntity {
 
   public void setLastError(String lastError) {
     this.lastError = lastError;
+  }
+
+  public String getDeduplicationKey() {
+    return deduplicationKey;
+  }
+
+  public void setDeduplicationKey(String deduplicationKey) {
+    this.deduplicationKey = deduplicationKey;
+  }
+
+  public LocalDateTime getDeduplicationKeyUpdatedAt() {
+    return deduplicationKeyUpdatedAt;
+  }
+
+  public void setDeduplicationKeyUpdatedAt(LocalDateTime deduplicationKeyUpdatedAt) {
+    this.deduplicationKeyUpdatedAt = deduplicationKeyUpdatedAt;
   }
 }

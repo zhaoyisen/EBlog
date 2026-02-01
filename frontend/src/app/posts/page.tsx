@@ -40,32 +40,80 @@ export default async function PostsPage() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] px-5 py-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">文章</h1>
-          <p className="mt-1 text-sm text-neutral-600">公开可见的文章列表</p>
+    <main className="min-h-[calc(100vh-4rem)] px-4 py-12 sm:px-6 lg:px-8 bg-neutral-50/50">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl">
+            探索文章
+          </h1>
+          <p className="mt-4 text-lg text-neutral-600 max-w-2xl mx-auto">
+            发现最新的技术见解、教程和思考。
+          </p>
         </div>
 
         {error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</div>
+          <div className="mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-900">
+            <p>{error}</p>
+          </div>
         ) : posts.length === 0 ? (
-          <div className="rounded-2xl border border-black/10 bg-white/70 p-6 text-sm text-neutral-700">
-            还没有文章。
+          <div className="mx-auto max-w-md rounded-2xl border border-neutral-200 bg-white p-12 text-center text-neutral-500">
+            <p className="text-lg">还没有文章。</p>
           </div>
         ) : (
-          <div className="grid gap-4">
-            {posts.map((p) => (
-              <a
-                key={p.id}
-                href={`/posts/${encodeURIComponent(p.slug)}`}
-                className="block rounded-3xl border border-black/10 bg-white/70 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_16px_56px_rgba(0,0,0,0.10)]"
-              >
-                <div className="text-xs text-neutral-500">作者 #{p.authorId}</div>
-                <div className="mt-1 text-xl font-semibold tracking-tight text-neutral-900">{p.title}</div>
-                <div className="mt-2 text-sm text-neutral-700">{p.summary?.trim() ? p.summary : "暂无摘要"}</div>
-              </a>
-            ))}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {posts.map((p) => {
+              const tags = p.tagsCsv ? p.tagsCsv.split(",").filter(Boolean) : [];
+              return (
+                <a
+                  key={p.id}
+                  href={`/posts/${encodeURIComponent(p.slug)}`}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
+                >
+                  <div className="flex flex-1 flex-col p-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-800">
+                        {p.category || "未分类"}
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                    
+                    <h3 className="mt-4 text-xl font-bold tracking-tight text-neutral-900 group-hover:text-neutral-700">
+                      {p.title}
+                    </h3>
+                    
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-600 line-clamp-3">
+                      {p.summary?.trim() ? p.summary : "暂无摘要"}
+                    </p>
+
+                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-neutral-100">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-neutral-200 flex items-center justify-center text-[10px] text-neutral-600 font-medium">
+                          {p.authorId}
+                        </div>
+                        <span className="text-xs text-neutral-500">作者 #{p.authorId}</span>
+                      </div>
+                      
+                      {tags.length > 0 && (
+                        <div className="flex gap-1">
+                          {tags.slice(0, 2).map((tag) => (
+                            <span key={tag} className="inline-flex items-center rounded-md bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10">
+                              {tag}
+                            </span>
+                          ))}
+                          {tags.length > 2 && (
+                            <span className="inline-flex items-center rounded-md bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10">
+                              +{tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         )}
       </div>

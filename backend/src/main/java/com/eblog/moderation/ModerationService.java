@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnBean({PostMapper.class, AuditLogMapper.class})
 public class ModerationService {
 
   private final PostMapper postMapper;

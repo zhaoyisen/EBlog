@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnBean(MinioClient.class)
 public class UploadService {
   private final MinioClient minioClient;
   private final String publicBucket;

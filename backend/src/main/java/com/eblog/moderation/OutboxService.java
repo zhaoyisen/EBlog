@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnBean(OutboxMapper.class)
 public class OutboxService {
 
   private final OutboxMapper outboxMapper;
@@ -21,15 +20,35 @@ public class OutboxService {
   }
 
   @Transactional
-  public void enqueue(String entityType, Long entityId) {
+  public void enqueue(String entityType, Long entityId, String deduplicationKey) {
+    // Idempotency check: if a PENDING or PROCESSING task with same key exists, skip
+    OutboxEntity existing = outboxMapper.selectOne(
+      new LambdaQueryWrapper<OutboxEntity>()
+        .eq(OutboxEntity::getEntityType, entityType)
+        .eq(OutboxEntity::getEntityId, entityId)
+        .eq(OutboxEntity::getDeduplicationKey, deduplicationKey)
+        .in(OutboxEntity::getStatus, OutboxStatus.PENDING.name(), OutboxStatus.PROCESSING.name())
+    );
+
+    if (existing != null) {
+      return;
+    }
+
     OutboxEntity entity = new OutboxEntity();
     entity.setEntityType(entityType);
     entity.setEntityId(entityId);
+    entity.setDeduplicationKey(deduplicationKey);
+    entity.setDeduplicationKeyUpdatedAt(LocalDateTime.now());
     entity.setStatus(OutboxStatus.PENDING.name());
     entity.setCreatedAt(LocalDateTime.now());
     entity.setUpdatedAt(LocalDateTime.now());
     entity.setAttempts(0);
     outboxMapper.insert(entity);
+  }
+
+  @Transactional
+  public void enqueue(String entityType, Long entityId) {
+    enqueue(entityType, entityId, "auto");
   }
 
   public List<OutboxEntity> lockPendingTasks(int limit) {
@@ -46,6 +65,10 @@ public class OutboxService {
 
   public int markFailed(Long id, String error) {
     return outboxMapper.markFailed(id, error);
+  }
+
+  public int markDeadLetter(Long id, String error) {
+    return outboxMapper.markDeadLetter(id, error);
   }
 
   public OutboxEntity findByEntity(String entityType, Long entityId, OutboxStatus status) {

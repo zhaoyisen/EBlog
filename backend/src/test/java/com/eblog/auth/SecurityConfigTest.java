@@ -12,7 +12,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+@SpringBootTest(
+    properties = {
+      "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration",
+      "spring.datasource.url=jdbc:h2:mem:eblog;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",
+      "spring.datasource.driver-class-name=org.h2.Driver",
+      "spring.datasource.username=sa",
+      "spring.datasource.password="
+    })
 @AutoConfigureMockMvc
 class SecurityConfigTest {
 
@@ -22,8 +29,26 @@ class SecurityConfigTest {
   @Test
   void refreshDoesNotTriggerBasicAuthPrompt() throws Exception {
     mockMvc.perform(post("/api/v1/auth/refresh"))
-        .andExpect(status().is4xxClientError())
+        .andExpect(status().isOk()) // Returns 200 with ApiResponse.fail
         .andExpect(header().doesNotExist("WWW-Authenticate"));
+  }
+
+  @Test
+  void refreshIsExcludedFromCsrf() throws Exception {
+    mockMvc.perform(post("/api/v1/auth/refresh"))
+        .andExpect(status().isOk()); // Should be OK even without CSRF token
+  }
+
+  @Test
+  void logoutIsExcludedFromCsrf() throws Exception {
+    mockMvc.perform(post("/api/v1/auth/logout"))
+        .andExpect(status().isOk()); // Should be OK even without CSRF token
+  }
+
+  @Test
+  void loginRequiresCsrfToken() throws Exception {
+    mockMvc.perform(post("/api/v1/auth/login"))
+        .andExpect(status().isForbidden()); // 403 Forbidden due to missing CSRF
   }
 
   @Test

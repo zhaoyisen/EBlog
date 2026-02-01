@@ -1,6 +1,9 @@
-# 配置清单（不使用环境变量）
+# 配置清单（配置文件为主，容器化部署可用环境变量覆盖）
 
-说明：本项目不再通过环境变量注入配置，所有配置写入配置文件。
+说明：
+- 开发期建议优先使用配置文件（便于本地调试与版本可追溯）。
+- 容器化部署（见 `infra/docker-compose*.yml`）会通过环境变量注入/覆盖部分运行参数（例如 DB/MinIO/SMTP/COOKIE_SECURE 等）。
+- `infra/.env` **不要提交到仓库**；请使用 `infra/.env.example` 作为模板。
 
 ## backend
 
@@ -54,3 +57,16 @@
 ## 验证记录
 
 - 2026-01-31：本地联调通过，前端代理调用 `/api/v1/auth/email-code/send-register` 返回 `success=true`。
+
+## Docker/生产环境（env 注入）
+
+生产或容器化运行时，建议通过 `infra/docker-compose.prod.yml` 统一编排：
+
+- 环境变量模板：`infra/.env.example`
+- 实际文件：`infra/.env`（本地复制后填写）
+
+常用变量（按 compose 文件可能存在两套命名，详见 `infra/.env.example`）：
+- MySQL：`MYSQL_*` 或 `DB_*`
+- MinIO：`MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`
+- 邮件：`SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD`
+- Cookie：`COOKIE_SECURE`

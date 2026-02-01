@@ -11,7 +11,6 @@
  import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@ConditionalOnBean(PostMapper.class)
 public class FeedController {
 
   private final PostMapper postMapper;

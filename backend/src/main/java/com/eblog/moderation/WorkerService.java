@@ -7,6 +7,7 @@ import com.eblog.moderation.enums.ModerationStatus;
 import com.eblog.moderation.enums.OutboxStatus;
 import com.eblog.moderation.mapper.AuditLogMapper;
 import com.eblog.moderation.mapper.OutboxMapper;
+import com.eblog.moderation.OutboxService;
 import com.eblog.post.PostEntity;
 import com.eblog.post.PostMapper;
 import com.eblog.comment.entity.CommentEntity;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnBean({OutboxMapper.class, PostMapper.class})
 public class WorkerService {
 
   private static final Logger log = LoggerFactory.getLogger(WorkerService.class);
@@ -47,7 +47,7 @@ public class WorkerService {
       AuditLogMapper auditLogMapper,
       PostMapper postMapper,
       CommentMapper commentMapper,
-      ModerationService moderationService) {
+      @org.springframework.context.annotation.Lazy ModerationService moderationService) {
     this.outboxService = outboxService;
     this.ruleEngine = ruleEngine;
     this.auditLogMapper = auditLogMapper;
@@ -95,7 +95,11 @@ public class WorkerService {
       log.info("Processed outbox task: {} {}", task.getEntityType(), task.getEntityId());
     } catch (Exception e) {
       log.error("Error processing outbox task: {} {}", task.getEntityType(), task.getEntityId(), e);
-      outboxService.markFailed(task.getId(), e.getMessage());
+      if (task.getAttempts() + 1 >= 3) {
+        outboxService.markDeadLetter(task.getId(), e.getMessage());
+      } else {
+        outboxService.markFailed(task.getId(), e.getMessage());
+      }
     }
   }
 

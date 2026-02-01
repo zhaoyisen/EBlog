@@ -29,7 +29,6 @@ import com.eblog.moderation.entity.AuditLogEntity;
 
 @RestController
 @RequestMapping("/api/v1/admin/moderation")
-@ConditionalOnBean({PostMapper.class, OutboxMapper.class})
 public class AdminModerationController {
 
   private final ModerationService moderationService;

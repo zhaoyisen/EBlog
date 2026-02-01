@@ -42,6 +42,7 @@ public class MeController {
 
     UserView view = new UserView();
     view.id = user.getId();
+    view.email = user.getEmail();
     view.nickname = user.getNickname();
     view.avatarUrl = user.getAvatarUrl();
     view.bio = user.getBio();
@@ -78,6 +79,7 @@ public class MeController {
 
     UserView view = new UserView();
     view.id = user.getId();
+    view.email = user.getEmail();
     view.nickname = user.getNickname();
     view.avatarUrl = user.getAvatarUrl();
     view.bio = user.getBio();
@@ -133,6 +135,7 @@ public class MeController {
 
   public static class UserView {
     public Long id;
+    public String email;
     public String nickname;
     public String avatarUrl;
     public String bio;

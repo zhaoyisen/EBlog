@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/uploads")
-@ConditionalOnBean(MinioClient.class)
 public class UploadController {
   private final UploadService uploadService;
 

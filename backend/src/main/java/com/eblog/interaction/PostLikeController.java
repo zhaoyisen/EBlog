@@ -16,7 +16,6 @@
 
 @RestController
 @RequestMapping("/api/v1/posts/{postId}/likes")
-@ConditionalOnBean(PostLikeMapper.class)
 public class PostLikeController {
 
   private final InteractionService interactionService;

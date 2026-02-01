@@ -67,7 +67,8 @@ public class PostService {
     postMapper.insert(entity);
 
     if ("PUBLISHED".equals(normalizeStatus(status)) && outboxService != null) {
-      outboxService.enqueue("POST", entity.getId());
+      String deduplicationKey = "v-" + entity.getUpdatedAt().atZone(ZoneOffset.UTC).toEpochSecond();
+      outboxService.enqueue("POST", entity.getId(), deduplicationKey);
     }
 
     return CreateResult.success(entity.getId(), entity.getSlug());
@@ -115,7 +116,8 @@ public class PostService {
     postMapper.updateById(existing);
 
     if (! "PUBLISHED".equals(oldStatus) && "PUBLISHED".equals(newStatus) && outboxService != null) {
-      outboxService.enqueue("POST", postId);
+      String deduplicationKey = "v-" + existing.getUpdatedAt().atZone(ZoneOffset.UTC).toEpochSecond();
+      outboxService.enqueue("POST", postId, deduplicationKey);
       existing.setModerationStatus("PENDING");
       postMapper.updateById(existing);
     }

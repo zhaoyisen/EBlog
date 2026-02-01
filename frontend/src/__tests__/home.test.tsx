@@ -17,7 +17,7 @@ describe("Home", () => {
   });
 
   it("shows profile entry when logged in", () => {
-    useAuthMock.mockReturnValue({ accessToken: "token", ready: true, logout: vi.fn() });
+    useAuthMock.mockReturnValue({ accessToken: "token", ready: true, isAuthenticated: true, logout: vi.fn() });
     render(<Home />);
     expect(screen.getByRole("link", { name: "个人中心" })).toBeInTheDocument();
   });

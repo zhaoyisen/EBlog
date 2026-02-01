@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnBean({PostLikeMapper.class, PostFavoriteMapper.class, PostMapper.class})
 public class InteractionService {
 
   private final PostLikeMapper postLikeMapper;

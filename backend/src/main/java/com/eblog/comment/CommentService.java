@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@ConditionalOnBean({CommentMapper.class, PostMapper.class})
 public class CommentService {
 
   private final CommentMapper commentMapper;
@@ -92,7 +91,8 @@ public class CommentService {
     commentMapper.insert(comment);
 
     if (outboxService != null) {
-      outboxService.enqueue("COMMENT", comment.getId());
+      String deduplicationKey = "v-" + comment.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond();
+      outboxService.enqueue("COMMENT", comment.getId(), deduplicationKey);
     }
 
     return CreateResult.success(comment.getId());

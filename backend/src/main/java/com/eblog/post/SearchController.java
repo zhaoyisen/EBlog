@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/search")
-@ConditionalOnBean(PostMapper.class)
 public class SearchController {
   private static final int MAX_WINDOW = 1000;
   private static final int MAX_LIMIT = 50;

@@ -11,7 +11,7 @@ class OutboxStatusTest {
   @Test
   void testEnumValues() {
     OutboxStatus[] values = OutboxStatus.values();
-    assertEquals(4, values.length);
+    assertEquals(5, values.length);
   }
 
   @Test
@@ -20,6 +20,7 @@ class OutboxStatusTest {
     assertEquals("PROCESSING", OutboxStatus.PROCESSING.name());
     assertEquals("COMPLETED", OutboxStatus.COMPLETED.name());
     assertEquals("FAILED", OutboxStatus.FAILED.name());
+    assertEquals("DEAD_LETTER", OutboxStatus.DEAD_LETTER.name());
   }
 }
 

@@ -48,5 +48,17 @@ docker compose -f infra/docker-compose.prod.yml up -d
 
 # 检查服务状态
 docker compose -f infra/docker-compose.prod.yml ps
-```- MySQL 与 MinIO 必须挂载 Docker volumes
+```
+
+### 快速验证
+
+```bash
+# Nginx 健康检查
+curl -f http://localhost/health
+
+# 后端健康检查（经 Nginx 反代）
+curl -f http://localhost/api/v1/health
+```
+
+- MySQL 与 MinIO 必须挂载 Docker volumes
 - 需要提供：MySQL 定时备份方案 + MinIO 数据备份方案（后续任务补齐）

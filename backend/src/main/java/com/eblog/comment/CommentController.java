@@ -19,7 +19,6 @@
 
 @RestController
 @RequestMapping("/api/v1/posts/{postId}/comments")
-@ConditionalOnBean(CommentMapper.class)
 public class CommentController {
 
   private final CommentService commentService;

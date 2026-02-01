@@ -130,21 +130,31 @@ public class AuthController {
       return ApiResponse.fail(ErrorCode.UNAUTHORIZED.getCode(), ErrorCode.UNAUTHORIZED.getMessage());
     }
 
-    // rotate refresh token
-    String newRefreshToken = TokenGenerator.randomToken();
-    String newHash = RefreshTokenHasher.sha256Hex(newRefreshToken);
-    RefreshTokenEntity newEntity = new RefreshTokenEntity();
-    newEntity.setUserId(user.getId());
-    newEntity.setTokenHash(newHash);
-    newEntity.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
-    newEntity.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusSeconds(refreshTtlSeconds));
-    refreshTokenMapper.insert(newEntity);
+    // Check if rotation is needed
+    // Rotate only if expired time is less than threshold (e.g. 50% of TTL)
+    // This prevents race conditions when multiple refresh requests are sent in parallel (e.g. F5 spam)
+    long secondsUntilExpire = java.time.Duration.between(LocalDateTime.now(ZoneOffset.UTC), oldEntity.getExpiresAt()).getSeconds();
+    boolean shouldRotate = secondsUntilExpire < (refreshTtlSeconds / 2);
 
-    oldEntity.setRevokedAt(LocalDateTime.now(ZoneOffset.UTC));
-    oldEntity.setReplacedByHash(newHash);
-    refreshTokenMapper.updateById(oldEntity);
+    if (shouldRotate) {
+      // rotate refresh token
+      String newRefreshToken = TokenGenerator.randomToken();
+      String newHash = RefreshTokenHasher.sha256Hex(newRefreshToken);
+      RefreshTokenEntity newEntity = new RefreshTokenEntity();
+      newEntity.setUserId(user.getId());
+      newEntity.setTokenHash(newHash);
+      newEntity.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+      newEntity.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusSeconds(refreshTtlSeconds));
+      refreshTokenMapper.insert(newEntity);
 
-    setRefreshCookie(response, newRefreshToken, (int) refreshTtlSeconds);
+      oldEntity.setRevokedAt(LocalDateTime.now(ZoneOffset.UTC));
+      oldEntity.setReplacedByHash(newHash);
+      refreshTokenMapper.updateById(oldEntity);
+
+      setRefreshCookie(response, newRefreshToken, (int) refreshTtlSeconds);
+    } else {
+      // Just issue new access token, keep old refresh token valid
+    }
 
     LoginResponse res = new LoginResponse();
     res.accessToken = jwtService.createAccessToken(user.getId().longValue(), user.getRole());
