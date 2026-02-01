@@ -1,4 +1,5 @@
 import { appConfig } from "../../config/appConfig";
+import PostCard from "../../components/PostCard";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -9,6 +10,8 @@ type ApiResponse<T> = {
 type PostSummary = {
   id: number;
   authorId: number;
+  authorName?: string | null;
+  authorAvatar?: string | null;
   title: string;
   slug: string;
   summary: string | null;
@@ -52,69 +55,47 @@ export default async function PostsPage() {
         </div>
 
         {error ? (
-          <div className="mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-900">
-            <p>{error}</p>
+          <div className="mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center text-rose-900">
+            <svg className="mx-auto h-12 w-12 text-rose-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="font-medium">{error}</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="mx-auto max-w-md rounded-2xl border border-neutral-200 bg-white p-12 text-center text-neutral-500">
-            <p className="text-lg">还没有文章。</p>
+            <svg className="mx-auto h-16 w-16 text-neutral-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-lg font-medium">还没有文章</p>
+            <p className="mt-2 text-sm text-neutral-400">快去创建第一篇文章吧！</p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((p) => {
-              const tags = p.tagsCsv ? p.tagsCsv.split(",").filter(Boolean) : [];
-              return (
-                <a
-                  key={p.id}
-                  href={`/posts/${encodeURIComponent(p.slug)}`}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
-                >
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-800">
-                        {p.category || "未分类"}
-                      </span>
-                      <span className="text-xs text-neutral-500">
-                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ""}
-                      </span>
-                    </div>
-                    
-                    <h3 className="mt-4 text-xl font-bold tracking-tight text-neutral-900 group-hover:text-neutral-700">
-                      {p.title}
-                    </h3>
-                    
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-600 line-clamp-3">
-                      {p.summary?.trim() ? p.summary : "暂无摘要"}
-                    </p>
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
 
-                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-neutral-100">
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-neutral-200 flex items-center justify-center text-[10px] text-neutral-600 font-medium">
-                          {p.authorId}
-                        </div>
-                        <span className="text-xs text-neutral-500">作者 #{p.authorId}</span>
-                      </div>
-                      
-                      {tags.length > 0 && (
-                        <div className="flex gap-1">
-                          {tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="inline-flex items-center rounded-md bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10">
-                              {tag}
-                            </span>
-                          ))}
-                          {tags.length > 2 && (
-                            <span className="inline-flex items-center rounded-md bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-inset ring-neutral-500/10">
-                              +{tags.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
+            {/* 分页 */}
+            <div className="mt-12 flex items-center justify-center gap-2">
+              <button
+                disabled
+                className="px-4 py-2 text-sm font-medium text-neutral-500 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                上一页
+              </button>
+              <button className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 border border-transparent rounded-lg hover:bg-neutral-800 transition-colors">
+                1
+              </button>
+              <button
+                disabled
+                className="px-4 py-2 text-sm font-medium text-neutral-500 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                下一页
+              </button>
+            </div>
+          </>
         )}
       </div>
     </main>

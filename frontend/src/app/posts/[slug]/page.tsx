@@ -1,6 +1,6 @@
-import { renderMdxCached } from "../../../lib/mdx/renderMdx";
 import { appConfig } from "../../../config/appConfig";
 import PostInteractions from "./_components/PostInteractions";
+import MarkdownRenderer from "../../../components/MarkdownRenderer";
 
 
 type ApiResponse<T> = {
@@ -12,6 +12,8 @@ type ApiResponse<T> = {
 type PostDetail = {
   id: number;
   authorId: number;
+  authorName?: string | null;
+  authorAvatar?: string | null;
   title: string;
   slug: string;
   summary: string | null;
@@ -86,42 +88,25 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               )}
 
               <div className="mt-8 flex items-center justify-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-600 font-medium">
-                  {post.authorId}
-                </div>
-                <span className="text-sm font-medium text-neutral-900">作者 #{post.authorId}</span>
+                {post.authorAvatar ? (
+                  <img
+                    src={post.authorAvatar}
+                    alt={post.authorName || `作者 #${post.authorId}`}
+                    className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-200"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-600 font-medium">
+                    {(post.authorName || `#${post.authorId}`).charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-neutral-900">{post.authorName || `作者 #${post.authorId}`}</span>
               </div>
             </div>
           </header>
 
           {/* Content Section */}
           <div className="mx-auto max-w-3xl px-5 py-12">
-            <div className="prose prose-zinc prose-lg dark:prose-invert max-w-none">
-              {String(post.format).toUpperCase() === "MDX" ? (
-                <>
-                  {await (async () => {
-                    try {
-                      const key = `${post.id}:${post.updatedAt ?? ""}`;
-                      const node = await renderMdxCached(key, post.contentMarkdown);
-                      return node;
-                    } catch {
-                      return (
-                        <div className="not-prose rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
-                          这篇文章的 MDX 渲染失败，已安全降级。
-                          <pre className="mt-4 overflow-auto rounded bg-white p-4 text-xs text-neutral-800">
-                            {post.contentMarkdown}
-                          </pre>
-                        </div>
-                      );
-                    }
-                  })()}
-                </>
-              ) : post.contentHtml?.trim() ? (
-                <div dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
-              ) : (
-                <pre className="whitespace-pre-wrap font-mono text-sm">{post.contentMarkdown}</pre>
-              )}
-            </div>
+            <MarkdownRenderer content={post.contentMarkdown} />
 
             {/* Tags */}
             {post.tagsCsv && (

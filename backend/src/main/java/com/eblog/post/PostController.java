@@ -2,9 +2,12 @@ package com.eblog.post;
 
 import com.eblog.api.common.ApiResponse;
 import com.eblog.api.common.ErrorCode;
+import com.eblog.user.UserMapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,10 +26,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
   private final PostService postService;
   private final MarkdownRenderer markdownRenderer;
+  private final UserMapper userMapper;
+  // 作者信息缓存（避免重复查询）
+  private final Map<Long, String> authorNicknameCache = new HashMap<>();
+  private final Map<Long, String> authorAvatarCache = new HashMap<>();
 
-  public PostController(PostService postService, MarkdownRenderer markdownRenderer) {
+  public PostController(PostService postService, MarkdownRenderer markdownRenderer, UserMapper userMapper) {
     this.postService = postService;
     this.markdownRenderer = markdownRenderer;
+    this.userMapper = userMapper;
   }
 
   @GetMapping
@@ -39,6 +47,8 @@ public class PostController {
       PostSummary s = new PostSummary();
       s.id = p.getId();
       s.authorId = p.getAuthorId();
+      s.authorName = getAuthorNickname(p.getAuthorId());
+      s.authorAvatar = getAuthorAvatar(p.getAuthorId());
       s.title = p.getTitle();
       s.slug = p.getSlug();
       s.summary = p.getSummary();
@@ -95,6 +105,8 @@ public class PostController {
     PostDetail d = new PostDetail();
     d.id = p.getId();
     d.authorId = p.getAuthorId();
+    d.authorName = getAuthorNickname(p.getAuthorId());
+    d.authorAvatar = getAuthorAvatar(p.getAuthorId());
     d.title = p.getTitle();
     d.slug = p.getSlug();
     d.summary = p.getSummary();
@@ -162,6 +174,30 @@ public class PostController {
     }
   }
 
+  private String getAuthorNickname(Long authorId) {
+    if (authorId == null) {
+      return null;
+    }
+    if (!authorNicknameCache.containsKey(authorId)) {
+      var user = userMapper.selectById(authorId);
+      authorNicknameCache.put(authorId, user != null && user.getNickname() != null && !user.getNickname().trim().isEmpty()
+          ? user.getNickname().trim()
+          : "#" + authorId);
+    }
+    return authorNicknameCache.get(authorId);
+  }
+
+  private String getAuthorAvatar(Long authorId) {
+    if (authorId == null) {
+      return null;
+    }
+    if (!authorAvatarCache.containsKey(authorId)) {
+      var user = userMapper.selectById(authorId);
+      authorAvatarCache.put(authorId, user != null ? user.getAvatarUrl() : null);
+    }
+    return authorAvatarCache.get(authorId);
+  }
+
   private static boolean isAdmin() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth == null || auth.getAuthorities() == null) {
@@ -204,6 +240,8 @@ public class PostController {
   public static class PostSummary {
     public Long id;
     public Long authorId;
+    public String authorName;
+    public String authorAvatar;
     public String title;
     public String slug;
     public String summary;
@@ -227,6 +265,8 @@ public class PostController {
   public static class PostDetail {
     public Long id;
     public Long authorId;
+    public String authorName;
+    public String authorAvatar;
     public String title;
     public String slug;
     public String summary;

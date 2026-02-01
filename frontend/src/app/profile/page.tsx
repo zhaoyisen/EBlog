@@ -390,7 +390,7 @@ export default function ProfilePage() {
                               </div>
                               <div className="flex gap-2 shrink-0">
                                 <Link
-                                  href={`/posts/edit/${post.id}/edit`}
+                                  href={`/posts/${post.id}/edit`}
                                   className="inline-flex items-center rounded-md bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-200 transition-colors"
                                 >
                                   编辑
