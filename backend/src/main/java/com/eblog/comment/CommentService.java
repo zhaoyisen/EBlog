@@ -76,7 +76,7 @@ public class CommentService {
     }
 
     PostEntity post = postMapper.selectById(postId);
-    if (post == null || !"PUBLISHED".equals(post.getStatus()) || "REJECTED".equals(post.getModerationStatus())) {
+    if (post == null || !"PUBLISHED".equals(post.getStatus()) || !"APPROVED".equals(post.getModerationStatus())) {
       return CreateResult.error(ErrorCode.POST_NOT_FOUND);
     }
 

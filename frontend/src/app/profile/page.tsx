@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../lib/auth/AuthProvider";
+import { UserList } from "../../components/UserList";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -19,7 +20,7 @@ type UserView = {
   createdAt: string;
 };
 
-type TabId = "profile" | "posts" | "settings";
+type TabId = "profile" | "posts" | "following" | "followers" | "settings";
 
 type MyPostView = {
   id: number;
@@ -39,6 +40,10 @@ export default function ProfilePage() {
   const [user, setUser] = useState<UserView | null>(null);
   const [myPosts, setMyPosts] = useState<MyPostView[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
+  
+  const [following, setFollowing] = useState<UserView[]>([]);
+  const [followers, setFollowers] = useState<UserView[]>([]);
+  const [socialLoading, setSocialLoading] = useState(false);
   
   // Edit Profile State
   const [nickname, setNickname] = useState("");
@@ -90,6 +95,38 @@ export default function ProfilePage() {
     }
   }, [apiFetch]);
 
+  const fetchFollowing = useCallback(async () => {
+    if (!user) return;
+    setSocialLoading(true);
+    try {
+      const res = await apiFetch(`/api/v1/users/${user.id}/following`, { cache: "no-store" });
+      const json = (await res.json()) as ApiResponse<UserView[]>;
+      if (json?.success && json.data) {
+        setFollowing(json.data);
+      }
+    } catch {
+      console.error("Failed to fetch following");
+    } finally {
+      setSocialLoading(false);
+    }
+  }, [apiFetch, user]);
+
+  const fetchFollowers = useCallback(async () => {
+    if (!user) return;
+    setSocialLoading(true);
+    try {
+      const res = await apiFetch(`/api/v1/users/${user.id}/followers`, { cache: "no-store" });
+      const json = (await res.json()) as ApiResponse<UserView[]>;
+      if (json?.success && json.data) {
+        setFollowers(json.data);
+      }
+    } catch {
+      console.error("Failed to fetch followers");
+    } finally {
+      setSocialLoading(false);
+    }
+  }, [apiFetch, user]);
+
   useEffect(() => {
     if (!ready) return;
     if (!accessToken) {
@@ -100,10 +137,16 @@ export default function ProfilePage() {
   }, [accessToken, fetchProfile, ready]);
 
   useEffect(() => {
-    if (activeTab === "posts" && ready && accessToken) {
+    if (!ready || !accessToken) return;
+
+    if (activeTab === "posts") {
       void fetchMyPosts();
+    } else if (activeTab === "following") {
+      void fetchFollowing();
+    } else if (activeTab === "followers") {
+      void fetchFollowers();
     }
-  }, [activeTab, fetchMyPosts, ready, accessToken]);
+  }, [activeTab, fetchMyPosts, fetchFollowing, fetchFollowers, ready, accessToken]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -283,6 +326,8 @@ export default function ProfilePage() {
             {[
               { id: "profile", label: "编辑资料" },
               { id: "posts", label: "我的文章" },
+              { id: "following", label: "我的关注" },
+              { id: "followers", label: "我的粉丝" },
               { id: "settings", label: "账户设置" },
             ].map((tab) => (
               <button
@@ -444,6 +489,38 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === "following" && (
+             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {socialLoading ? (
+                 <div className="py-12 text-center">
+                   <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-900"></div>
+                 </div>
+               ) : (
+                 <UserList 
+                   users={following} 
+                   emptyMessage="您还没有关注任何人"
+                   onUserUpdate={fetchFollowing}
+                 />
+               )}
+             </div>
+          )}
+
+          {activeTab === "followers" && (
+             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+               {socialLoading ? (
+                 <div className="py-12 text-center">
+                   <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-900"></div>
+                 </div>
+               ) : (
+                 <UserList 
+                   users={followers} 
+                   emptyMessage="您还没有粉丝"
+                   onUserUpdate={fetchFollowers}
+                 />
+               )}
+             </div>
           )}
 
           {activeTab === "settings" && (

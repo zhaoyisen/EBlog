@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../lib/auth/AuthProvider";
 import dynamic from "next/dynamic";
+import CategorySelect from "../../../components/CategorySelect";
 
 // 动态导入 ByteMDEditor 以避免 SSR 问题 (编辑器依赖 window)
 const ByteMDEditor = dynamic(() => import("../../../components/ByteMDEditor"), {
@@ -28,6 +29,7 @@ export default function PostNewPage() {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
   const [tagsCsv, setTagsCsv] = useState("");
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -35,6 +37,7 @@ export default function PostNewPage() {
 
   // 自动保存 key
   const DRAFT_KEY = "post_draft_new";
+
 
   // 加载草稿
   useEffect(() => {
@@ -73,7 +76,28 @@ export default function PostNewPage() {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     }, 1000); // 1秒防抖
     return () => clearTimeout(timer);
-  }, [title, summary, content, category, tagsCsv, draftLoaded]);
+    }, [title, summary, content, category, tagsCsv, draftLoaded]);
+
+  // 加载分类列表
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await apiFetch("/api/v1/categories");
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data.data || []);
+        } else {
+          console.error("Failed to fetch categories");
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
+  // 自动保存
 
   useEffect(() => {
     if (ready && !accessToken) {
@@ -166,7 +190,7 @@ export default function PostNewPage() {
         }),
       });
 
-      const json = (await res.json()) as ApiResponse<{ postId: number; slug: string }>;
+      const json = (await res.json()) as ApiResponse<{ postId: string; slug: string }>;
       if (json?.success && json.data) {
         // 草稿保存成功，清除本地草稿
         localStorage.removeItem(DRAFT_KEY);
@@ -218,7 +242,7 @@ export default function PostNewPage() {
         }),
       });
 
-      const json = (await res.json()) as ApiResponse<{ postId: number; slug: string }>;
+      const json = (await res.json()) as ApiResponse<{ postId: string; slug: string }>;
       if (json?.success && json.data) {
         // 发布成功，清除草稿
         localStorage.removeItem(DRAFT_KEY);
@@ -303,13 +327,10 @@ export default function PostNewPage() {
                   <label htmlFor="category" className="block text-sm font-medium text-neutral-900">
                     分类
                   </label>
-                  <input
-                    id="category"
-                    type="text"
+                  <CategorySelect
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="例如：技术"
-                    className="mt-2 block w-full rounded-lg border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white focus:ring-0 sm:text-sm"
+                    onChange={setCategory}
+                    categories={categories}
                     disabled={loading}
                   />
                 </div>

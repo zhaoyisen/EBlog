@@ -14,6 +14,7 @@ public enum ErrorCode {
   COMMENT_NOT_FOUND("COMMENT_NOT_FOUND", "评论不存在"),
   TOO_MANY_REQUESTS("TOO_MANY_REQUESTS", "请求过于频繁"),
   NOT_FOUND("NOT_FOUND", "资源不存在"),
+  CONFLICT("CONFLICT", "资源冲突或已存在"),
   INTERNAL_ERROR("INTERNAL_ERROR", "服务器内部错误");
 
   private final String code;

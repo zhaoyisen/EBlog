@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { appConfig } from "../../../config/appConfig";
 import PostInteractions from "./_components/PostInteractions";
 import MarkdownRenderer from "../../../components/MarkdownRenderer";
+import { FollowButton } from "../../../components/FollowButton";
+import { Eye, Calendar, Tag, Hash } from "lucide-react";
 
 
 type ApiResponse<T> = {
@@ -24,6 +27,7 @@ type PostDetail = {
   category: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+  viewCount?: number;
 };
 
 function apiUrl(path: string) {
@@ -64,17 +68,27 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       ) : post ? (
         <article>
           {/* Header Section */}
-          <header className="bg-neutral-50/50 border-b border-neutral-100 px-5 py-16 sm:py-24">
+          <header className="bg-neutral-50/50 border-b border-neutral-100 px-5 py-16 sm:py-20">
             <div className="mx-auto max-w-3xl text-center">
-              <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
                 {post.category && (
-                  <span className="inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-medium text-white">
+                  <Link
+                    href={`/categories/${encodeURIComponent(post.category)}`}
+                    className="inline-flex items-center rounded-full bg-neutral-900 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-neutral-800 transition-colors"
+                  >
                     {post.category}
-                  </span>
+                  </Link>
                 )}
-                <span className="text-sm text-neutral-500">
-                  {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}
-                </span>
+                <div className="flex items-center gap-3 text-sm text-neutral-500">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5" />
+                    {post.viewCount || 0} 阅读
+                  </span>
+                </div>
               </div>
               
               <h1 className="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl leading-tight">
@@ -82,24 +96,33 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               </h1>
               
               {post.summary && (
-                <p className="mt-6 text-lg text-neutral-600 leading-relaxed">
+                <p className="mt-6 text-lg text-neutral-600 leading-relaxed max-w-2xl mx-auto">
                   {post.summary}
                 </p>
               )}
 
-              <div className="mt-8 flex items-center justify-center gap-2">
-                {post.authorAvatar ? (
-                  <img
-                    src={post.authorAvatar}
-                    alt={post.authorName || `作者 #${post.authorId}`}
-                    className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-200"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center text-xs text-neutral-600 font-medium">
-                    {(post.authorName || `#${post.authorId}`).charAt(0).toUpperCase()}
+              <div className="mt-8 flex items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="flex items-center gap-2">
+                  {post.authorAvatar ? (
+                    <img
+                      src={post.authorAvatar}
+                      alt={post.authorName || `作者 #${post.authorId}`}
+                      className="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-neutral-200 to-neutral-300 flex items-center justify-center text-sm text-neutral-600 font-medium ring-2 ring-white shadow-sm">
+                      {(post.authorName || `#${post.authorId}`).charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="text-left">
+                    <div className="text-sm font-semibold text-neutral-900">{post.authorName || `作者 #${post.authorId}`}</div>
+                    <div className="text-xs text-neutral-500">发布者</div>
                   </div>
-                )}
-                <span className="text-sm font-medium text-neutral-900">{post.authorName || `作者 #${post.authorId}`}</span>
+                </div>
+                
+                <div className="h-8 w-px bg-neutral-200 mx-2"></div>
+                
+                <FollowButton targetUserId={post.authorId} />
               </div>
             </div>
           </header>
@@ -110,12 +133,17 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
             {/* Tags */}
             {post.tagsCsv && (
-              <div className="mt-12 pt-8 border-t border-neutral-100">
+              <div className="mt-16 pt-8 border-t border-neutral-100">
                 <div className="flex flex-wrap gap-2">
                   {post.tagsCsv.split(",").filter(Boolean).map((tag) => (
-                    <span key={tag} className="inline-flex items-center rounded-md bg-neutral-100 px-2.5 py-1 text-sm font-medium text-neutral-700">
-                      #{tag}
-                    </span>
+                    <Link
+                      key={tag}
+                      href={`/tags/${encodeURIComponent(tag.trim())}`}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors"
+                    >
+                      <Hash className="w-3.5 h-3.5" />
+                      {tag.trim()}
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -123,7 +151,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
             {/* Interactions */}
             <div className="mt-12">
-              <PostInteractions postId={post.id} />
+              <PostInteractions postId={String(post.id)} />
             </div>
           </div>
         </article>

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { JetBrains_Mono, Noto_Sans_SC } from "next/font/google";
 import { Toaster } from "sonner";
 import { AuthProvider } from "../lib/auth/AuthProvider";
+import { ThemeProvider } from "../providers/ThemeProvider";
 import { Navbar } from "../components/Navbar";
 import "./globals.css";
 
@@ -38,9 +39,16 @@ export default async function RootLayout({
     <html lang="zh-CN">
       <body className={`${notoSansSc.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-background text-foreground`}>
         <AuthProvider initialAuth={hasRefreshToken}>
-          <Navbar />
-          {children}
-          <Toaster richColors position="top-center" />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            {children}
+            <Toaster richColors position="top-center" />
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

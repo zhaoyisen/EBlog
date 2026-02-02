@@ -7,9 +7,9 @@ import { Heart, Star, MessageSquare, Send, User } from "lucide-react";
 import { toast } from "sonner";
 
 type CommentDetail = {
-  id: number;
-  postId: number;
-  authorId: number;
+  id: string;
+  postId: string;
+  authorId: string;
   content: string;
   createdAt: string;
 };
@@ -23,7 +23,7 @@ type FavoriteStatus = {
   favorited: boolean;
 };
 
-export default function PostInteractions({ postId }: { postId: number }) {
+export default function PostInteractions({ postId }: { postId: string }) {
   const { accessToken, apiFetch, isAuthenticated } = useAuth();
   const [comments, setComments] = useState<CommentDetail[]>([]);
   const [likeStatus, setLikeStatus] = useState<LikeStatus>({ count: 0, liked: false });

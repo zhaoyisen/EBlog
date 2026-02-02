@@ -25,7 +25,8 @@ public class PostLikeController {
   }
 
   @GetMapping
-  public ApiResponse<LikeStatus> getLikeStatus(@PathVariable("postId") Long postId, @RequestParam(value = "userId", required = false) Long userId) {
+  public ApiResponse<LikeStatus> getLikeStatus(@PathVariable("postId") String postIdStr, @RequestParam(value = "userId", required = false) Long userId) {
+    Long postId = parsePostId(postIdStr);
     int count = interactionService.getLikeCount(postId);
     boolean liked = interactionService.isLikedByUser(postId, userId);
 
@@ -36,7 +37,8 @@ public class PostLikeController {
   }
 
   @PostMapping
-  public ApiResponse<LikeResponse> like(@PathVariable("postId") Long postId) {
+  public ApiResponse<LikeResponse> like(@PathVariable("postId") String postIdStr) {
+    Long postId = parsePostId(postIdStr);
     InteractionService.LikeResult result = interactionService.likePost(postId);
     if (!result.isSuccess()) {
       ErrorCode error = result.getError();
@@ -48,12 +50,21 @@ public class PostLikeController {
   }
 
   @DeleteMapping
-  public ApiResponse<Void> unlike(@PathVariable("postId") Long postId) {
+  public ApiResponse<Void> unlike(@PathVariable("postId") String postIdStr) {
+    Long postId = parsePostId(postIdStr);
     ErrorCode error = interactionService.unlikePost(postId);
     if (error != null) {
       return ApiResponse.fail(error.getCode(), error.getMessage());
     }
     return ApiResponse.ok(null);
+  }
+
+  private Long parsePostId(String postIdStr) {
+    try {
+      return Long.parseLong(postIdStr);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid post ID: " + postIdStr, e);
+    }
   }
 
   public static class LikeStatus {

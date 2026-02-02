@@ -1,8 +1,10 @@
-package com.eblog.post;
+ package com.eblog.post;
 
 import com.eblog.api.common.ApiResponse;
 import com.eblog.api.common.ErrorCode;
 import com.eblog.user.UserMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +58,7 @@ public class PostController {
       s.category = p.getCategory();
       s.createdAt = p.getCreatedAt();
       s.status = p.getStatus();
+      s.moderationStatus = p.getModerationStatus();
       res.add(s);
     }
     return ApiResponse.ok(res);
@@ -93,7 +96,7 @@ public class PostController {
       return ApiResponse.fail(ErrorCode.POST_NOT_FOUND.getCode(), ErrorCode.POST_NOT_FOUND.getMessage());
     }
 
-    boolean isPublic = "PUBLISHED".equalsIgnoreCase(p.getStatus()) && !"REJECTED".equalsIgnoreCase(p.getModerationStatus());
+    boolean isPublic = "PUBLISHED".equalsIgnoreCase(p.getStatus()) && "APPROVED".equalsIgnoreCase(p.getModerationStatus());
     if (!isPublic) {
       Long userId = currentUserId();
       boolean isAuthor = userId != null && userId.equals(p.getAuthorId());
@@ -233,12 +236,15 @@ public class PostController {
   }
 
   public static class CreateResponse {
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long postId;
     public String slug;
   }
 
   public static class PostSummary {
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long id;
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long authorId;
     public String authorName;
     public String authorAvatar;
@@ -249,9 +255,11 @@ public class PostController {
     public String category;
     public LocalDateTime createdAt;
     public String status;
+    public String moderationStatus;
   }
 
   public static class MyPostSummary {
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long id;
     public String title;
     public String slug;
@@ -263,7 +271,9 @@ public class PostController {
   }
 
   public static class PostDetail {
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long id;
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long authorId;
     public String authorName;
     public String authorAvatar;

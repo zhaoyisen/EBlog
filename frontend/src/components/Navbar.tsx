@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "../lib/auth/AuthProvider";
-import { Menu, X, PenLine, User, LogOut, Shield, BookOpen, Users } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
+import { Menu, X, PenLine, User, LogOut, Shield, BookOpen, Users, Search } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export function Navbar() {
   const { isAuthenticated, userRole, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +23,14 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+    }
+  };
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -71,6 +82,17 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+          <form onSubmit={handleSearch} className="relative hidden lg:block lg:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="search"
+              placeholder="搜索..."
+              className="h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+          <ThemeToggle />
           {isAuthenticated ? (
             <>
               {(userRole === "ADMIN" || userRole === "ROLE_ADMIN") && (
@@ -185,6 +207,11 @@ export function Navbar() {
                 登录
               </Link>
             )}
+            <div className="h-px bg-border my-2" />
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground/60">切换主题</span>
+              <ThemeToggle />
+            </div>
           </nav>
         </div>
       )}

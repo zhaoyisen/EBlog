@@ -184,6 +184,18 @@ public class PostService {
     return null;
   }
 
+  public List<PostEntity> search(String q, String tag, Long authorId, int limit, int offset) {
+    int safeLimit = Math.min(Math.max(limit, 1), 50);
+    int safeOffset = Math.max(offset, 0);
+    return postMapper.search(isBlank(q) ? null : q.trim(), isBlank(tag) ? null : tag.trim(), authorId, safeLimit, safeOffset);
+  }
+
+  public void incrementViewCount(Long postId) {
+    if (postId != null) {
+      postMapper.incrementViewCount(postId);
+    }
+  }
+
   private static boolean canEdit(PostEntity post, Long userId) {
     if (post.getAuthorId() != null && post.getAuthorId().equals(userId)) {
       return true;

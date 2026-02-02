@@ -24,7 +24,8 @@ public class PostFavoriteController {
   }
 
   @GetMapping
-  public ApiResponse<FavoriteStatus> getFavoriteStatus(@PathVariable("postId") Long postId, @RequestParam(value = "userId", required = false) Long userId) {
+  public ApiResponse<FavoriteStatus> getFavoriteStatus(@PathVariable("postId") String postIdStr, @RequestParam(value = "userId", required = false) Long userId) {
+    Long postId = parsePostId(postIdStr);
     boolean favorited = interactionService.isFavoritedByUser(postId, userId);
     FavoriteStatus status = new FavoriteStatus();
     status.favorited = favorited;
@@ -32,7 +33,8 @@ public class PostFavoriteController {
   }
 
   @PostMapping
-  public ApiResponse<Void> favorite(@PathVariable("postId") Long postId) {
+  public ApiResponse<Void> favorite(@PathVariable("postId") String postIdStr) {
+    Long postId = parsePostId(postIdStr);
     ErrorCode error = interactionService.favoritePost(postId);
     if (error != null) {
       return ApiResponse.fail(error.getCode(), error.getMessage());
@@ -41,12 +43,21 @@ public class PostFavoriteController {
   }
 
   @DeleteMapping
-  public ApiResponse<Void> unfavorite(@PathVariable("postId") Long postId) {
+  public ApiResponse<Void> unfavorite(@PathVariable("postId") String postIdStr) {
+    Long postId = parsePostId(postIdStr);
     ErrorCode error = interactionService.unfavoritePost(postId);
     if (error != null) {
       return ApiResponse.fail(error.getCode(), error.getMessage());
     }
     return ApiResponse.ok(null);
+  }
+
+  private Long parsePostId(String postIdStr) {
+    try {
+      return Long.parseLong(postIdStr);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid post ID: " + postIdStr, e);
+    }
   }
 
   public static class FavoriteStatus {

@@ -2,6 +2,8 @@ import Link from "next/link";
 
 const links = [
   { href: "/admin/users", label: "用户管理" },
+  { href: "/admin/categories", label: "分类管理" },
+  { href: "/admin/tags", label: "标签管理" },
   { href: "/admin/invite-codes", label: "邀请码" },
   { href: "/admin/moderation", label: "审核中心" },
 ];

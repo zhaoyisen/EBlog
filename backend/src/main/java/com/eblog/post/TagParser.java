@@ -38,4 +38,16 @@ public final class TagParser {
     t = t.replaceAll("\\s+", " ");
     return t;
   }
+
+  public static String slugify(String raw) {
+    String t = normalize(raw);
+    if (t == null) {
+      return null;
+    }
+    // Replace whitespace with dash
+    t = t.replaceAll("\\s+", "-");
+    // Remove unsafe chars
+    t = t.replaceAll("[^a-z0-9-_]", "");
+    return t;
+  }
 }

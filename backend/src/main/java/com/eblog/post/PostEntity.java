@@ -18,6 +18,33 @@ public class PostEntity {
   private String moderationStatus;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+  private Integer viewCount;
+  private Boolean isPinned;
+  private Boolean isFeatured;
+
+  public Integer getViewCount() {
+    return viewCount;
+  }
+
+  public void setViewCount(Integer viewCount) {
+    this.viewCount = viewCount;
+  }
+
+  public Boolean getIsPinned() {
+    return isPinned;
+  }
+
+  public void setIsPinned(Boolean isPinned) {
+    this.isPinned = isPinned;
+  }
+
+  public Boolean getIsFeatured() {
+    return isFeatured;
+  }
+
+  public void setIsFeatured(Boolean isFeatured) {
+    this.isFeatured = isFeatured;
+  }
 
   public Long getId() {
     return id;

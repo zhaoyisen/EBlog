@@ -1,8 +1,10 @@
-package com.eblog.user;
+ package com.eblog.user;
 
 import com.eblog.api.common.ApiResponse;
 import com.eblog.api.common.ErrorCode;
 import com.eblog.auth.RefreshTokenMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import org.springframework.security.core.Authentication;
@@ -134,6 +136,7 @@ public class MeController {
   }
 
   public static class UserView {
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long id;
     public String email;
     public String nickname;

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { appConfig } from "../../config/appConfig";
 
 type ApiResponse<T> = {
@@ -6,7 +7,14 @@ type ApiResponse<T> = {
   error?: { code: string; message: string };
 };
 
-type CategoryCount = { category: string; count: number };
+type Category = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  postCount: number;
+  createdAt: string;
+};
 
 function apiUrl(path: string) {
   const baseRaw = appConfig.internalApiBase;
@@ -15,12 +23,12 @@ function apiUrl(path: string) {
 }
 
 export default async function CategoriesPage() {
-  let categories: CategoryCount[] = [];
+  let categories: Category[] = [];
   let error: string | null = null;
 
   try {
     const res = await fetch(apiUrl("/api/v1/categories"), { cache: "no-store" });
-    const json = (await res.json()) as ApiResponse<CategoryCount[]>;
+    const json = (await res.json()) as ApiResponse<Category[]>;
     if (json?.success && Array.isArray(json.data)) {
       categories = json.data;
     } else {
@@ -35,7 +43,7 @@ export default async function CategoriesPage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">分类</h1>
-          <p className="mt-1 text-sm text-neutral-600">分类为自由文本（MVP）</p>
+          <p className="mt-1 text-sm text-neutral-600">浏览不同技术领域的文章分类</p>
         </div>
 
         {error ? (
@@ -43,14 +51,23 @@ export default async function CategoriesPage() {
         ) : categories.length === 0 ? (
           <div className="rounded-2xl border border-black/10 bg-white/70 p-6 text-sm text-neutral-700">还没有分类。</div>
         ) : (
-          <div className="grid gap-2">
+          <div className="grid gap-3">
             {categories.map((c) => (
-              <div key={c.category} className="rounded-2xl border border-black/10 bg-white/70 p-4">
+              <Link
+                key={c.id}
+                href={`/categories/${c.slug}`}
+                className="rounded-2xl border border-black/10 bg-white/70 p-4 hover:border-black/20 hover:bg-white/90 transition-all"
+              >
                 <div className="flex items-center justify-between gap-4">
-                  <div className="text-sm font-medium text-neutral-900">{c.category}</div>
-                  <div className="text-xs text-neutral-500">{c.count}</div>
+                  <div>
+                    <div className="text-sm font-medium text-neutral-900">{c.name}</div>
+                    {c.description && (
+                      <div className="text-xs text-neutral-500 mt-1">{c.description}</div>
+                    )}
+                  </div>
+                  <div className="text-xs text-neutral-500 whitespace-nowrap">{c.postCount} 篇文章</div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

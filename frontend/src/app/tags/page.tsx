@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { appConfig } from "../../config/appConfig";
 
 type ApiResponse<T> = {
@@ -6,7 +7,13 @@ type ApiResponse<T> = {
   error?: { code: string; message: string };
 };
 
-type TagCount = { tag: string; count: number };
+type Tag = {
+  id: number;
+  name: string;
+  slug: string;
+  postCount: number;
+  createdAt: string;
+};
 
 function apiUrl(path: string) {
   const baseRaw = appConfig.internalApiBase;
@@ -15,12 +22,12 @@ function apiUrl(path: string) {
 }
 
 export default async function TagsPage() {
-  let tags: TagCount[] = [];
+  let tags: Tag[] = [];
   let error: string | null = null;
 
   try {
     const res = await fetch(apiUrl("/api/v1/tags"), { cache: "no-store" });
-    const json = (await res.json()) as ApiResponse<TagCount[]>;
+    const json = (await res.json()) as ApiResponse<Tag[]>;
     if (json?.success && Array.isArray(json.data)) {
       tags = json.data;
     } else {
@@ -35,7 +42,7 @@ export default async function TagsPage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">标签</h1>
-          <p className="mt-1 text-sm text-neutral-600">标签默认小写规范化（MVP）</p>
+          <p className="mt-1 text-sm text-neutral-600">通过标签发现感兴趣的文章</p>
         </div>
 
         {error ? (
@@ -45,14 +52,14 @@ export default async function TagsPage() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {tags.map((t) => (
-              <a
-                key={t.tag}
-                href={`/tags/${encodeURIComponent(t.tag)}`}
-                className="rounded-full border border-black/10 bg-white/70 px-3 py-1 text-sm text-neutral-800 shadow-sm hover:bg-white"
+              <Link
+                key={t.id}
+                href={`/tags/${t.slug}`}
+                className="rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-sm text-neutral-800 shadow-sm hover:bg-white hover:border-black/20 transition-all"
               >
-                {t.tag}
-                <span className="ml-2 text-xs text-neutral-500">{t.count}</span>
-              </a>
+                #{t.name}
+                <span className="ml-2 text-xs text-neutral-500">{t.postCount}</span>
+              </Link>
             ))}
           </div>
         )}

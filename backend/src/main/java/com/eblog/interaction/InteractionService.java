@@ -50,7 +50,7 @@ public class InteractionService {
     }
 
     PostEntity post = postMapper.selectById(postId);
-    if (post == null || !"PUBLISHED".equals(post.getStatus()) || "REJECTED".equals(post.getModerationStatus())) {
+    if (post == null || !"PUBLISHED".equals(post.getStatus()) || !"APPROVED".equals(post.getModerationStatus())) {
       return LikeResult.error(ErrorCode.POST_NOT_FOUND);
     }
 
@@ -89,7 +89,7 @@ public class InteractionService {
     }
 
     PostEntity post = postMapper.selectById(postId);
-    if (post == null || !"PUBLISHED".equals(post.getStatus()) || "REJECTED".equals(post.getModerationStatus())) {
+    if (post == null || !"PUBLISHED".equals(post.getStatus()) || !"APPROVED".equals(post.getModerationStatus())) {
       return ErrorCode.POST_NOT_FOUND;
     }
 

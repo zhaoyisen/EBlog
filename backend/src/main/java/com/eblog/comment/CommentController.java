@@ -1,21 +1,23 @@
  package com.eblog.comment;
 
- import com.eblog.api.common.ApiResponse;
- import com.eblog.api.common.ErrorCode;
- import com.eblog.comment.mapper.CommentMapper;
- import com.eblog.comment.entity.CommentEntity;
- import java.time.LocalDateTime;
- import java.util.ArrayList;
- import java.util.List;
- import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
- import org.springframework.web.bind.annotation.DeleteMapping;
- import org.springframework.web.bind.annotation.GetMapping;
- import org.springframework.web.bind.annotation.PathVariable;
- import org.springframework.web.bind.annotation.PostMapping;
- import org.springframework.web.bind.annotation.RequestBody;
- import org.springframework.web.bind.annotation.RequestMapping;
- import org.springframework.web.bind.annotation.RequestParam;
- import org.springframework.web.bind.annotation.RestController;
+import com.eblog.api.common.ApiResponse;
+import com.eblog.api.common.ErrorCode;
+import com.eblog.comment.mapper.CommentMapper;
+import com.eblog.comment.entity.CommentEntity;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/posts/{postId}/comments")
@@ -29,9 +31,10 @@ public class CommentController {
 
   @GetMapping
   public ApiResponse<List<CommentDetail>> list(
-      @PathVariable("postId") Long postId,
+      @PathVariable("postId") String postIdStr,
       @RequestParam(name = "limit", required = false, defaultValue = "20") int limit,
       @RequestParam(name = "offset", required = false, defaultValue = "0") int offset) {
+    Long postId = parsePostId(postIdStr);
     List<CommentEntity> comments = commentService.listPublicByPostId(postId, limit, offset);
     List<CommentDetail> res = new ArrayList<>();
     for (CommentEntity c : comments) {
@@ -48,11 +51,12 @@ public class CommentController {
 
   @PostMapping
   public ApiResponse<CreateResponse> create(
-      @PathVariable("postId") Long postId,
+      @PathVariable("postId") String postIdStr,
       @RequestBody CreateRequest body) {
     if (body == null || body.content == null) {
       return ApiResponse.fail(ErrorCode.BAD_REQUEST.getCode(), ErrorCode.BAD_REQUEST.getMessage());
     }
+    Long postId = parsePostId(postIdStr);
     CommentService.CreateResult result = commentService.create(postId, body.content);
     if (!result.isSuccess()) {
       ErrorCode error = result.getError();
@@ -61,6 +65,14 @@ public class CommentController {
     CreateResponse res = new CreateResponse();
     res.commentId = result.getCommentId();
     return ApiResponse.ok(res);
+  }
+
+  private Long parsePostId(String postIdStr) {
+    try {
+      return Long.parseLong(postIdStr);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid post ID: " + postIdStr, e);
+    }
   }
 
   @DeleteMapping("/{commentId}")
@@ -81,8 +93,11 @@ public class CommentController {
   }
 
   public static class CommentDetail {
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long id;
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long postId;
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long authorId;
     public String content;
     public LocalDateTime createdAt;
